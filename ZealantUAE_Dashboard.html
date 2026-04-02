@@ -1155,11 +1155,7 @@
       const r = await fetch('https://graph.microsoft.com/v1.0' + path, {
         headers: { Authorization: 'Bearer ' + _token }
       });
-      if (!r.ok) {
-        let detail = '';
-        try { const e = await r.json(); detail = e?.error?.message || ''; } catch(_) {}
-        throw new Error('Graph ' + r.status + (detail ? ': ' + detail : '') + ' — ' + path.split('?')[0]);
-      }
+      if (!r.ok) throw new Error('Graph ' + r.status);
       return r.json();
     }
 
@@ -1169,37 +1165,7 @@
       return d.values || [];
     }
 
-    async function getTable(tableName) {
-      // Read all rows from a named Excel Table — bypasses usedRange truncation
-      // Graph API: each row object has { values: [[col0, col1, ...]] } — 2D single-row array
-      const baseUrl = '/drives/' + CONFIG.DRIVE_ID + '/items/' + CONFIG.FILE_ID +
-        '/workbook/tables/' + encodeURIComponent(tableName) + '/rows';
-      let allRows = [], skip = 0, pageSize = 500, maxPages = 20;
-      try {
-        while (maxPages-- > 0) {
-          const d = await graphGet(baseUrl + '?$top=' + pageSize + '&$skip=' + skip);
-          const items = d.value || [];
-          const rows = items.map(r => {
-            const v = r.values;
-            if (Array.isArray(v) && Array.isArray(v[0])) return v[0];
-            if (Array.isArray(v)) return v;
-            return [];
-          });
-          allRows = allRows.concat(rows);
-          console.log('[getTable] ' + tableName + ' page skip=' + skip + ' got=' + items.length + ' total=' + allRows.length);
-          if (items.length < pageSize) break;
-          skip += pageSize;
-        }
-        return allRows;
-      } catch (err) {
-        console.warn('[getTable] ' + tableName + ' failed (' + err.message + '), falling back to usedRange');
-        // Fallback: read sheet by table name → sheet name mapping
-        const sheetMap = { tblReceivables: 'Receivables', tblPayables: 'Payables', tblBankBalances: 'BankBalances' };
-        const sheetName = sheetMap[tableName] || tableName;
-        const raw = await getSheet(sheetName);
-        return raw.slice(1).filter(r => r[0]); // skip header
-      }
-    }
+
 
     // ═══════════════════════════════════════════════════════
     // DATA — mirrors getDashboardData() in Apps Script exactly
@@ -1221,19 +1187,14 @@
     }
 
     async function getDashboardData() {
-      const [recData, payData, bankData, projRaw] = await Promise.all([
-        getTable('tblReceivables'), getTable('tblPayables'),
-        getTable('tblBankBalances'), getSheet('Projection')
+      const [recRaw, payRaw, bankRaw, projRaw] = await Promise.all([
+        getSheet('Receivables'), getSheet('Payables'),
+        getSheet('BankBalances'), getSheet('Projection')
       ]);
 
-      // recData/payData/bankData come from table rows — no header, no slice needed, filter empty
-      // Debug: log first row of each to verify column shape
-      console.log('[DEBUG] recData total rows:', recData.length, '| first row:', JSON.stringify(recData[0]));
-      console.log('[DEBUG] payData total rows:', payData.length, '| first row:', JSON.stringify(payData[0]));
-      console.log('[DEBUG] bankData total rows:', bankData.length, '| first row:', JSON.stringify(bankData[0]));
-      const recRows = recData.filter(r => r[0]);
-      const payRows = payData.filter(r => r[0]);
-      const bankRows = bankData.filter(r => r[0]);
+      const recRows = recRaw.slice(1).filter(r => r[0]);
+      const payRows = payRaw.slice(1).filter(r => r[0]);
+      const bankRows = bankRaw.slice(1).filter(r => r[0]);
       const projData = projRaw.slice(1).filter(r => r[0]);
 
       const ACTIVE_REC_STATUSES = ['sent', 'unpaid', 'overdue', 'partially_paid'];
@@ -1660,21 +1621,12 @@
     }
 
     async function init() {
-      const dash = document.getElementById('dashboard');
       try {
-        dash.innerHTML = '<div class="loading">Loading auth library...</div>';
         await initMsal();
-        dash.innerHTML = '<div class="loading">Checking session...</div>';
         _token = await getTokenSilent();
-        if (_token) {
-          dash.innerHTML = '<div class="loading">Fetching live data...</div>';
-          loadAndRender();
-        } else {
-          showLogin();
-        }
+        if (_token) { loadAndRender(); } else { showLogin(); }
       } catch (err) {
-        dash.innerHTML = '<div class="loading">⚠ Auth error: ' + (err.message || String(err)) + '<br><br><button class="login-btn" onclick="location.reload()" style="margin-top:16px">Retry</button></div>';
-        console.error('Init error:', err);
+        document.getElementById('dashboard').innerHTML = '<div class="loading">⚠ Auth error: ' + err.message + '</div>';
       }
     }
 
