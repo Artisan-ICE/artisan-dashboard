@@ -1155,7 +1155,11 @@
       const r = await fetch('https://graph.microsoft.com/v1.0' + path, {
         headers: { Authorization: 'Bearer ' + _token }
       });
-      if (!r.ok) throw new Error('Graph ' + r.status);
+      if (!r.ok) {
+        let detail = '';
+        try { const e = await r.json(); detail = e?.error?.message || ''; } catch(_) {}
+        throw new Error('Graph ' + r.status + (detail ? ': ' + detail : '') + ' — ' + path.split('?')[0]);
+      }
       return r.json();
     }
 
@@ -1170,22 +1174,31 @@
       // Graph API: each row object has { values: [[col0, col1, ...]] } — 2D single-row array
       const baseUrl = '/drives/' + CONFIG.DRIVE_ID + '/items/' + CONFIG.FILE_ID +
         '/workbook/tables/' + encodeURIComponent(tableName) + '/rows';
-      let allRows = [], skip = 0, pageSize = 500;
-      while (true) {
-        const d = await graphGet(baseUrl + '?$top=' + pageSize + '&$skip=' + skip);
-        const items = d.value || [];
-        const rows = items.map(r => {
-          const v = r.values;
-          // v is [[col0, col1, ...]] — take the inner array
-          if (Array.isArray(v) && Array.isArray(v[0])) return v[0];
-          if (Array.isArray(v)) return v;
-          return [];
-        });
-        allRows = allRows.concat(rows);
-        if (items.length < pageSize) break;
-        skip += pageSize;
+      let allRows = [], skip = 0, pageSize = 500, maxPages = 20;
+      try {
+        while (maxPages-- > 0) {
+          const d = await graphGet(baseUrl + '?$top=' + pageSize + '&$skip=' + skip);
+          const items = d.value || [];
+          const rows = items.map(r => {
+            const v = r.values;
+            if (Array.isArray(v) && Array.isArray(v[0])) return v[0];
+            if (Array.isArray(v)) return v;
+            return [];
+          });
+          allRows = allRows.concat(rows);
+          console.log('[getTable] ' + tableName + ' page skip=' + skip + ' got=' + items.length + ' total=' + allRows.length);
+          if (items.length < pageSize) break;
+          skip += pageSize;
+        }
+        return allRows;
+      } catch (err) {
+        console.warn('[getTable] ' + tableName + ' failed (' + err.message + '), falling back to usedRange');
+        // Fallback: read sheet by table name → sheet name mapping
+        const sheetMap = { tblReceivables: 'Receivables', tblPayables: 'Payables', tblBankBalances: 'BankBalances' };
+        const sheetName = sheetMap[tableName] || tableName;
+        const raw = await getSheet(sheetName);
+        return raw.slice(1).filter(r => r[0]); // skip header
       }
-      return allRows;
     }
 
     // ═══════════════════════════════════════════════════════
@@ -1647,12 +1660,21 @@
     }
 
     async function init() {
+      const dash = document.getElementById('dashboard');
       try {
+        dash.innerHTML = '<div class="loading">Loading auth library...</div>';
         await initMsal();
+        dash.innerHTML = '<div class="loading">Checking session...</div>';
         _token = await getTokenSilent();
-        if (_token) { loadAndRender(); } else { showLogin(); }
+        if (_token) {
+          dash.innerHTML = '<div class="loading">Fetching live data...</div>';
+          loadAndRender();
+        } else {
+          showLogin();
+        }
       } catch (err) {
-        document.getElementById('dashboard').innerHTML = '<div class="loading">⚠ Auth error: ' + err.message + '</div>';
+        dash.innerHTML = '<div class="loading">⚠ Auth error: ' + (err.message || String(err)) + '<br><br><button class="login-btn" onclick="location.reload()" style="margin-top:16px">Retry</button></div>';
+        console.error('Init error:', err);
       }
     }
 
