@@ -1038,11 +1038,12 @@
     <div class="header">
       <div class="logo-block">
         <div class="logo-box">
-          <img src="logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
           <div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div>
         </div>
         <div class="header-title">
           <h1><em>Cash Flow</em> Intelligence</h1>
+          <div class="header-sub"><span class="dot"></span>Live · Hyprflow Business Solutions</div>
         </div>
       </div>
       <div class="header-right">
@@ -1126,7 +1127,7 @@
       document.getElementById('syncInfo').textContent = '';
       document.getElementById('dashboard').innerHTML = `
     <div class="login-screen">
-      <div class="logo-box" style="border-color:rgba(142,202,230,0.5)"><img src="https://artisaniceco.com/wp-content/uploads/2023/01/artisan-ice-logo.png" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div></div>
+      <div class="logo-box" style="border-color:rgba(142,202,230,0.5)"><img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div></div>
       <div class="login-title"><em>Cash Flow</em> Intelligence</div>
       <div class="login-sub">Sign in with your Microsoft 365 account to access the live dashboard</div>
       <button class="login-btn" id="signInBtn">Sign in with Microsoft</button>
@@ -1166,15 +1167,22 @@
 
     async function getTable(tableName) {
       // Read all rows from a named Excel Table — bypasses usedRange truncation
-      // Returns array of arrays (no header row), fetching in pages of 500
+      // Graph API: each row object has { values: [[col0, col1, ...]] } — 2D single-row array
       const baseUrl = '/drives/' + CONFIG.DRIVE_ID + '/items/' + CONFIG.FILE_ID +
         '/workbook/tables/' + encodeURIComponent(tableName) + '/rows';
       let allRows = [], skip = 0, pageSize = 500;
       while (true) {
         const d = await graphGet(baseUrl + '?$top=' + pageSize + '&$skip=' + skip);
-        const rows = (d.value || []).map(r => r.values[0]);
+        const items = d.value || [];
+        const rows = items.map(r => {
+          const v = r.values;
+          // v is [[col0, col1, ...]] — take the inner array
+          if (Array.isArray(v) && Array.isArray(v[0])) return v[0];
+          if (Array.isArray(v)) return v;
+          return [];
+        });
         allRows = allRows.concat(rows);
-        if (rows.length < pageSize) break;
+        if (items.length < pageSize) break;
         skip += pageSize;
       }
       return allRows;
@@ -1206,6 +1214,10 @@
       ]);
 
       // recData/payData/bankData come from table rows — no header, no slice needed, filter empty
+      // Debug: log first row of each to verify column shape
+      console.log('[DEBUG] recData total rows:', recData.length, '| first row:', JSON.stringify(recData[0]));
+      console.log('[DEBUG] payData total rows:', payData.length, '| first row:', JSON.stringify(payData[0]));
+      console.log('[DEBUG] bankData total rows:', bankData.length, '| first row:', JSON.stringify(bankData[0]));
       const recRows = recData.filter(r => r[0]);
       const payRows = payData.filter(r => r[0]);
       const bankRows = bankData.filter(r => r[0]);
@@ -1256,6 +1268,8 @@
           balance: Number(row[7]) || 0,
           receivables: Number(row[3]) || 0,
           payables: Number(row[4]) || 0,
+          recurring: Number(row[5]) || 0,
+          net: Number(row[6]) || 0,
           status: String(row[8] || 'Healthy'),
           breakdown: { receivables: dayReceivables, payables: dayPayables }
         };
@@ -1312,7 +1326,7 @@
     function buildTooltipHTML(point) {
       const rec = point.breakdown.receivables;
       const pay = point.breakdown.payables;
-      const net = point.receivables - point.payables;
+      const net = point.net !== undefined ? point.net : (point.receivables - point.payables - (point.recurring || 0));
       const hasMovements = rec.length > 0 || pay.length > 0;
       const balClass = point.status === 'Critical' ? 'critical' : point.status === 'Warning' ? 'warning' : 'healthy';
 
@@ -1331,6 +1345,10 @@
           pay.forEach(p => {
             body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">${p.bill}${p.overdue ? '<span class="pt-overdue-tag">OVERDUE</span>' : ''}</div><div class="pt-name">${p.vendor}</div></div><span class="pt-amount out">${fmt(p.amount)}</span></div>`;
           });
+        }
+        if ((point.recurring || 0) > 0) {
+          body += '<div class="pt-section-label">Cash Out · Recurring Expenses</div>';
+          body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">Recurring</div><div class="pt-name">Scheduled expenses this day</div></div><span class="pt-amount out">${fmt(point.recurring)}</span></div>`;
         }
       }
 
@@ -1368,9 +1386,9 @@
     function openModal(point) {
       const rec = point.breakdown.receivables;
       const pay = point.breakdown.payables;
-      const net = point.receivables - point.payables;
+      const net = point.net !== undefined ? point.net : (point.receivables - point.payables - (point.recurring || 0));
       const totalIn = rec.reduce((s, r) => s + r.amount, 0);
-      const totalOut = pay.reduce((s, p) => s + p.amount, 0);
+      const totalOut = pay.reduce((s, p) => s + p.amount, 0) + (point.recurring || 0);
       const balClass = point.status === 'Critical' ? 'red' : point.status === 'Warning' ? 'amber' : 'green';
       const dayLabel = point.dayOffset === 0 ? 'Today' : 'Day ' + point.dayOffset;
 
@@ -1405,12 +1423,19 @@
         pay.forEach(p => {
           body += `<tr><td><div class="modal-ref">${p.bill}${p.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div><div class="modal-party">${p.vendor}</div></td><td class="modal-due">${p.originalDue || '—'}</td><td class="modal-amt-out">−${fmt(p.amount)}</td></tr>`;
         });
-        if (pay.length > 1) body += `<tr class="modal-total-row"><td colspan="2"><span class="modal-total-label">Total payables</span></td><td class="modal-amt-out">−${fmt(totalOut)}</td></tr>`;
+        if ((point.recurring || 0) > 0) {
+          body += `<tr><td><div class="modal-ref">Recurring Expenses</div><div class="modal-party">Scheduled expenses this day</div></td><td class="modal-due">—</td><td class="modal-amt-out">−${fmt(point.recurring)}</td></tr>`;
+        }
+        if (pay.length > 1 || (point.recurring || 0) > 0) body += `<tr class="modal-total-row"><td colspan="2"><span class="modal-total-label">Total payables + recurring</span></td><td class="modal-amt-out">−${fmt(totalOut)}</td></tr>`;
+        body += '</tbody></table>';
+      } else if ((point.recurring || 0) > 0) {
+        body += `<table class="modal-table"><thead><tr><th>Description</th><th>Date</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+        body += `<tr><td><div class="modal-ref">Recurring Expenses</div><div class="modal-party">Scheduled expenses this day</div></td><td class="modal-due">—</td><td class="modal-amt-out">−${fmt(point.recurring)}</td></tr>`;
         body += '</tbody></table>';
       }
       body += '</div>';
 
-      if (rec.length > 0 || pay.length > 0) {
+      if (rec.length > 0 || pay.length > 0 || (point.recurring || 0) > 0) {
         const netClass = net > 0 ? 'positive' : net < 0 ? 'negative' : 'zero';
         const netPrefix = net > 0 ? '+' : net < 0 ? '−' : '';
         const netLabel = net > 0 ? 'Net inflow — more cash coming in than going out' : net < 0 ? 'Net outflow — more cash going out than coming in' : 'Balanced';
@@ -1495,7 +1520,7 @@
       const labels = data.projection.map(p => p.date);
       const balances = data.projection.map(p => p.balance);
       const recVals = data.projection.map(p => p.receivables);
-      const payVals = data.projection.map(p => p.payables);
+      const payVals = data.projection.map(p => p.payables + p.recurring); // includes recurring expenses
       const critical = 10000, warning = 20000;
 
       const projMax = Math.max(...balances);
