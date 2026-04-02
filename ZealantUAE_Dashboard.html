@@ -1165,6 +1165,22 @@
       return d.values || [];
     }
 
+    async function getTable(tableName) {
+      // Read all rows from a named Excel Table — bypasses usedRange truncation
+      // Returns array of arrays (no header row), fetching in pages of 500
+      const baseUrl = '/drives/' + CONFIG.DRIVE_ID + '/items/' + CONFIG.FILE_ID +
+        '/workbook/tables/' + encodeURIComponent(tableName) + '/rows';
+      let allRows = [], skip = 0, pageSize = 500;
+      while (true) {
+        const d = await graphGet(baseUrl + '?$top=' + pageSize + '&$skip=' + skip);
+        const rows = (d.value || []).map(r => r.values[0]);
+        allRows = allRows.concat(rows);
+        if (rows.length < pageSize) break;
+        skip += pageSize;
+      }
+      return allRows;
+    }
+
     // ═══════════════════════════════════════════════════════
     // DATA — mirrors getDashboardData() in Apps Script exactly
     // ═══════════════════════════════════════════════════════
@@ -1185,29 +1201,30 @@
     }
 
     async function getDashboardData() {
-      const [recRaw, payRaw, bankRaw, projRaw] = await Promise.all([
-        getSheet('Receivables'), getSheet('Payables'),
-        getSheet('BankBalances'), getSheet('Projection')
+      const [recData, payData, bankData, projRaw] = await Promise.all([
+        getTable('tblReceivables'), getTable('tblPayables'),
+        getTable('tblBankBalances'), getSheet('Projection')
       ]);
 
-      const recData = recRaw.slice(1).filter(r => r[0]);
-      const payData = payRaw.slice(1).filter(r => r[0]);
-      const bankData = bankRaw.slice(1).filter(r => r[0]);
+      // recData/payData/bankData come from table rows — no header, no slice needed, filter empty
+      const recRows = recData.filter(r => r[0]);
+      const payRows = payData.filter(r => r[0]);
+      const bankRows = bankData.filter(r => r[0]);
       const projData = projRaw.slice(1).filter(r => r[0]);
 
       const ACTIVE_REC_STATUSES = ['sent', 'unpaid', 'overdue', 'partially_paid'];
       const ACTIVE_PAY_STATUSES = ['open', 'unpaid', 'overdue', 'partially_paid'];
-      const totalReceivables = recData.filter(r => ACTIVE_REC_STATUSES.includes(String(r[8] || '').toLowerCase())).reduce((s, r) => s + (Number(r[7]) || 0), 0);
-      const totalPayables = payData.filter(r => ACTIVE_PAY_STATUSES.includes(String(r[8] || '').toLowerCase())).reduce((s, r) => s + (Number(r[7]) || 0), 0);
-      const currentBalance = bankData.reduce((s, r) => s + (Number(r[3]) || 0), 0);
-      const overdueRec = recData.filter(r => Number(r[10]) < 0);
-      const overduePay = payData.filter(r => Number(r[10]) < 0);
+      const totalReceivables = recRows.filter(r => ACTIVE_REC_STATUSES.includes(String(r[8] || '').toLowerCase())).reduce((s, r) => s + (Number(r[7]) || 0), 0);
+      const totalPayables = payRows.filter(r => ACTIVE_PAY_STATUSES.includes(String(r[8] || '').toLowerCase())).reduce((s, r) => s + (Number(r[7]) || 0), 0);
+      const currentBalance = bankRows.reduce((s, r) => s + (Number(r[3]) || 0), 0);
+      const overdueRec = recRows.filter(r => Number(r[10]) < 0);
+      const overduePay = payRows.filter(r => Number(r[10]) < 0);
       const todayStr = new Date().toISOString().split('T')[0];
 
       const projection = projData.map(row => {
         const rowDateStr = toDateStr(row[0]);
 
-        const dayReceivables = recData.filter(r => {
+        const dayReceivables = recRows.filter(r => {
           const due = toDateStr(r[5]); if (!due) return false;
           const eff = due < todayStr ? todayStr : due;
           return eff === rowDateStr;
@@ -1217,7 +1234,7 @@
           originalDue: fmtDateDisplay(r[5])
         }));
 
-        const dayPayables = payData.filter(p => {
+        const dayPayables = payRows.filter(p => {
           const due = toDateStr(p[5]); if (!due) return false;
           const eff = due < todayStr ? todayStr : due;
           return eff === rowDateStr;
@@ -1245,21 +1262,21 @@
         };
       });
 
-      const bankAccounts = bankData.map(r => ({ name: String(r[1] || ''), balance: Number(r[3]) || 0 }));
+      const bankAccounts = bankRows.map(r => ({ name: String(r[1] || ''), balance: Number(r[3]) || 0 }));
 
-      const topReceivables = [...recData].sort((a, b) => (Number(a[10]) || 0) - (Number(b[10]) || 0)).slice(0, 5).map(r => ({
+      const topReceivables = [...recRows].sort((a, b) => (Number(a[10]) || 0) - (Number(b[10]) || 0)).slice(0, 5).map(r => ({
         customer: String(r[2] || ''), invoice: String(r[1] || ''),
         amount: Number(r[7]) || 0, daysUntilDue: Number(r[10]) || 0, dueDate: fmtDateDisplay(r[5])
       }));
 
-      const topPayables = [...payData].sort((a, b) => (Number(a[10]) || 0) - (Number(b[10]) || 0)).slice(0, 5).map(r => ({
+      const topPayables = [...payRows].sort((a, b) => (Number(a[10]) || 0) - (Number(b[10]) || 0)).slice(0, 5).map(r => ({
         vendor: String(r[2] || ''), bill: String(r[1] || ''),
         amount: Number(r[7]) || 0, daysUntilDue: Number(r[10]) || 0, dueDate: fmtDateDisplay(r[5])
       }));
 
       const minBalance = projection.length ? Math.min(...projection.map(p => p.balance)) : 0;
-      const lastSync = recData[0] && recData[0][11]
-        ? new Date(recData[0][11]).toLocaleString('en-AE', { timeZone: 'Asia/Dubai', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      const lastSync = recRows[0] && recRows[0][11]
+        ? new Date(recRows[0][11]).toLocaleString('en-AE', { timeZone: 'Asia/Dubai', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
         : 'N/A';
 
       return {
