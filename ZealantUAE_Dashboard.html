@@ -73,8 +73,11 @@
 
     .logo-box {
       border: 1px solid rgba(142, 202, 230, 0.5);
-      padding: 10px 13px;
+      padding: 8px 10px;
       flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .logo-text {
@@ -1035,7 +1038,8 @@
     <div class="header">
       <div class="logo-block">
         <div class="logo-box">
-          <div class="logo-text">ARTISAN<br>ICE CO.</div>
+          <img src="https://artisaniceco.com/wp-content/uploads/2023/01/artisan-ice-logo.png" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div>
         </div>
         <div class="header-title">
           <h1><em>Cash Flow</em> Intelligence</h1>
@@ -1123,7 +1127,7 @@
       document.getElementById('syncInfo').textContent = '';
       document.getElementById('dashboard').innerHTML = `
     <div class="login-screen">
-      <div class="logo-box" style="border-color:rgba(142,202,230,0.5)"><div class="logo-text">ARTISAN<br>ICE CO.</div></div>
+      <div class="logo-box" style="border-color:rgba(142,202,230,0.5)"><img src="https://artisaniceco.com/wp-content/uploads/2023/01/artisan-ice-logo.png" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div></div>
       <div class="login-title"><em>Cash Flow</em> Intelligence</div>
       <div class="login-sub">Sign in with your Microsoft 365 account to access the live dashboard</div>
       <button class="login-btn" id="signInBtn">Sign in with Microsoft</button>
@@ -1191,8 +1195,10 @@
       const bankData = bankRaw.slice(1).filter(r => r[0]);
       const projData = projRaw.slice(1).filter(r => r[0]);
 
-      const totalReceivables = recData.reduce((s, r) => s + (Number(r[7]) || 0), 0);
-      const totalPayables = payData.reduce((s, r) => s + (Number(r[7]) || 0), 0);
+      const ACTIVE_REC_STATUSES = ['sent', 'unpaid', 'overdue', 'partially_paid'];
+      const ACTIVE_PAY_STATUSES = ['open', 'unpaid', 'overdue', 'partially_paid'];
+      const totalReceivables = recData.filter(r => ACTIVE_REC_STATUSES.includes(String(r[8] || '').toLowerCase())).reduce((s, r) => s + (Number(r[7]) || 0), 0);
+      const totalPayables = payData.filter(r => ACTIVE_PAY_STATUSES.includes(String(r[8] || '').toLowerCase())).reduce((s, r) => s + (Number(r[7]) || 0), 0);
       const currentBalance = bankData.reduce((s, r) => s + (Number(r[3]) || 0), 0);
       const overdueRec = recData.filter(r => Number(r[10]) < 0);
       const overduePay = payData.filter(r => Number(r[10]) < 0);
@@ -1241,12 +1247,12 @@
 
       const bankAccounts = bankData.map(r => ({ name: String(r[1] || ''), balance: Number(r[3]) || 0 }));
 
-      const topReceivables = [...recData].sort((a, b) => (Number(b[7]) || 0) - (Number(a[7]) || 0)).slice(0, 5).map(r => ({
+      const topReceivables = [...recData].sort((a, b) => (Number(a[10]) || 0) - (Number(b[10]) || 0)).slice(0, 5).map(r => ({
         customer: String(r[2] || ''), invoice: String(r[1] || ''),
         amount: Number(r[7]) || 0, daysUntilDue: Number(r[10]) || 0, dueDate: fmtDateDisplay(r[5])
       }));
 
-      const topPayables = [...payData].sort((a, b) => (Number(b[7]) || 0) - (Number(a[7]) || 0)).slice(0, 5).map(r => ({
+      const topPayables = [...payData].sort((a, b) => (Number(a[10]) || 0) - (Number(b[10]) || 0)).slice(0, 5).map(r => ({
         vendor: String(r[2] || ''), bill: String(r[1] || ''),
         amount: Number(r[7]) || 0, daysUntilDue: Number(r[10]) || 0, dueDate: fmtDateDisplay(r[5])
       }));
