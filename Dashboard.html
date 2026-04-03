@@ -11,7 +11,7 @@
     /* ═══════════════════════════════════════════════════
    ARTISAN ICE CO. — CASH FLOW DASHBOARD
    Visual: artisaniceco.com
-   Data Flow: Microsoft Graph API → Excel on SharePoint
+   Data: Microsoft Graph API → Excel on SharePoint
    ═══════════════════════════════════════════════════ */
 
     :root {
@@ -22,7 +22,7 @@
       --border2: rgba(255, 255, 255, 0.06);
       --white: #ffffff;
       --text: #e8e8e8;
-      --dim: #666666;
+      --dim: #999999;
       --red: #e05c5c;
       --green: #7ec8a0;
       --amber: #e8a838;
@@ -1039,11 +1039,11 @@
       <div class="logo-block">
         <div class="logo-box">
           <img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-          
+          <div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div>
         </div>
         <div class="header-title">
-          <h1><em>Cash Flow Projection</em></h1>
-        
+          <h1><em>Cash Flow</em> Projection</h1>
+
         </div>
       </div>
       <div class="header-right">
@@ -1084,12 +1084,18 @@
     // CONFIG
     // ═══════════════════════════════════════════════════════
     const CONFIG = {
-      CLIENT_ID: 'a1616b42-77ef-441b-af79-cdc6bf4f6af9',
+      CLIENT_ID: '7fac838d-cace-4a69-822d-64db84c8a494',
       TENANT_ID: '07b046b3-6a82-4b7b-a260-d152326e558f',
       DRIVE_ID: 'b!Yu_GdB9_zUyCHoaXZOr7VPo5LcETvW1ElxX_aIwAk5siEXTO4qIeQK0XXlByz4mz',
       FILE_ID: 'AB813CEA-49C8-4B16-AF2A-D0EB368F5E5D',
-      REDIRECT: 'https://artisan-ice.github.io/artisan-dashboard/Dashboard.html',
-      FLOW_URL: 'https://default07b046b36a824b7ba260d152326e55.8f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/41b56361ff5b4de0af17d6c15f7acfca/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=88dr1aIPYgvJiidsvRBjvb9HKAdJinU3uf6ZKuSizJ0'
+      REDIRECT: 'https://artisan-ice.github.io/artisan-dashboard/',
+      FLOW_URL: 'https://default07b046b36a824b7ba260d152326e55.8f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/41b56361ff5b4de0af17d6c15f7acfca/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=88dr1aIPYgvJiidsvRBjvb9HKAdJinU3uf6ZKuSizJ0',
+      // ── Allowed users — add/remove emails here ──────────────
+      ALLOWED_USERS: [
+        'accounts@artisaniceco.com',
+        'rafi@example.com'
+        // add more emails here
+      ]
     };
 
     // ═══════════════════════════════════════════════════════
@@ -1128,7 +1134,7 @@
       document.getElementById('dashboard').innerHTML = `
     <div class="login-screen">
       <div class="logo-box" style="border-color:rgba(142,202,230,0.5)"><img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div></div>
-      <div class="login-title"><em>Cash Flow</em> Intelligence</div>
+      <div class="login-title"><em>Cash Flow</em> Projection</div>
       <div class="login-sub">Sign in with your Microsoft 365 account to access the live dashboard</div>
       <button class="login-btn" id="signInBtn">Sign in with Microsoft</button>
       <div class="login-err" id="loginErr"></div>
@@ -1139,6 +1145,10 @@
         try {
           const r = await _msal.loginPopup({ scopes: ['Files.Read'] });
           _token = r.accessToken;
+          if (!isAllowedUser(r.account)) {
+            showAccessDenied(r.account.username);
+            return;
+          }
           loadAndRender();
         } catch (e) {
           btn.textContent = 'Sign in with Microsoft'; btn.disabled = false;
@@ -1187,15 +1197,35 @@
     }
 
     async function getDashboardData() {
-      const [recRaw, payRaw, bankRaw, projRaw] = await Promise.all([
+      const [recRaw, payRaw, bankRaw, projRaw, cfgRaw, recurRaw] = await Promise.all([
         getSheet('Receivables'), getSheet('Payables'),
-        getSheet('BankBalances'), getSheet('Projection')
+        getSheet('BankBalances'), getSheet('Projection'),
+        getSheet('Config'), getSheet('RecurringExpenses')
       ]);
 
       const recRows = recRaw.slice(1).filter(r => r[0]);
       const payRows = payRaw.slice(1).filter(r => r[0]);
       const bankRows = bankRaw.slice(1).filter(r => r[0]);
       const projData = projRaw.slice(1).filter(r => r[0]);
+
+      // Parse Config sheet — rows are [Setting, Value, ...]
+      let projectionDays = 60, criticalThreshold = 10000, warningThreshold = 20000;
+      cfgRaw.slice(1).filter(r => r[0]).forEach(r => {
+        const k = String(r[0]), v = Number(r[1]);
+        if (k === 'ProjectionDays' && v > 0) projectionDays = v;
+        if (k === 'CriticalThreshold' && v > 0) criticalThreshold = v;
+        if (k === 'WarningThreshold' && v > 0) warningThreshold = v;
+      });
+
+      // Build recurring expense lookup: dayOfMonth → [{name, amount}]
+      // RecurringExpenses columns: ExpenseName, Amount, DayOfMonth, Category, IsActive, Notes
+      const recurMap = {};
+      recurRaw.slice(1).filter(r => r[0] && (r[4] === true || r[4] === 1 || r[4] === 'TRUE')).forEach(r => {
+        const dom = Number(r[2]);
+        if (!dom) return;
+        if (!recurMap[dom]) recurMap[dom] = [];
+        recurMap[dom].push({ name: String(r[0] || 'Recurring'), amount: Number(r[1]) || 0, category: String(r[3] || '') });
+      });
 
       const ACTIVE_REC_STATUSES = ['sent', 'unpaid', 'overdue', 'partially_paid'];
       const ACTIVE_PAY_STATUSES = ['open', 'unpaid', 'overdue', 'partially_paid'];
@@ -1236,6 +1266,10 @@
           dateFull = fmtDateDisplay(row[0]);
         }
 
+        // Get recurring expense names for this day-of-month
+        const dom = rowDateStr ? parseInt(rowDateStr.split('-')[2], 10) : 0;
+        const dayRecurItems = (recurMap && recurMap[dom]) ? recurMap[dom] : [];
+
         return {
           date: dateShort, fullDate: dateFull,
           dayOffset: Number(row[1]) || 0,
@@ -1245,7 +1279,7 @@
           recurring: Number(row[5]) || 0,
           net: Number(row[6]) || 0,
           status: String(row[8] || 'Healthy'),
-          breakdown: { receivables: dayReceivables, payables: dayPayables }
+          breakdown: { receivables: dayReceivables, payables: dayPayables, recurItems: dayRecurItems }
         };
       });
 
@@ -1262,6 +1296,7 @@
       }));
 
       const minBalance = projection.length ? Math.min(...projection.map(p => p.balance)) : 0;
+      const config = { projectionDays, criticalThreshold, warningThreshold };
       const lastSync = recRows[0] && recRows[0][11]
         ? new Date(recRows[0][11]).toLocaleString('en-AE', { timeZone: 'Asia/Dubai', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
         : 'N/A';
@@ -1277,7 +1312,7 @@
           overduePayablesAmount: overduePay.reduce((s, r) => s + (Number(r[7]) || 0), 0),
           lastSync
         },
-        projection, bankAccounts, topReceivables, topPayables
+        projection, bankAccounts, topReceivables, topPayables, config, recurMap
       };
     }
 
@@ -1322,7 +1357,14 @@
         }
         if ((point.recurring || 0) > 0) {
           body += '<div class="pt-section-label">Cash Out · Recurring Expenses</div>';
-          body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">Recurring</div><div class="pt-name">Scheduled expenses this day</div></div><span class="pt-amount out">${fmt(point.recurring)}</span></div>`;
+          const recurItems = point.breakdown && point.breakdown.recurItems;
+          if (recurItems && recurItems.length > 0) {
+            recurItems.forEach(ri => {
+              body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">${ri.name}</div><div class="pt-name">${ri.category || 'Recurring'}</div></div><span class="pt-amount out">${fmt(ri.amount)}</span></div>`;
+            });
+          } else {
+            body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">Recurring Expenses</div><div class="pt-name">Scheduled expenses this day</div></div><span class="pt-amount out">${fmt(point.recurring)}</span></div>`;
+          }
         }
       }
 
@@ -1380,9 +1422,21 @@
       if (!rec.length) {
         body += '<div class="modal-empty">No receivables due this day</div>';
       } else {
-        body += `<table class="modal-table"><thead><tr><th>Invoice / Customer</th><th>Original Due</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+        body += `<table class="modal-table"><thead><tr><th>Invoice / Customer</th><th>Due Date</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+        // Group by customer for subtotals
+        const recByCustomer = {};
         rec.forEach(r => {
-          body += `<tr><td><div class="modal-ref">${r.invoice}${r.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div><div class="modal-party">${r.customer}</div></td><td class="modal-due">${r.originalDue || '—'}</td><td class="modal-amt-in">+${fmt(r.amount)}</td></tr>`;
+          if (!recByCustomer[r.customer]) recByCustomer[r.customer] = [];
+          recByCustomer[r.customer].push(r);
+        });
+        Object.entries(recByCustomer).forEach(([customer, invoices]) => {
+          invoices.forEach(r => {
+            body += `<tr><td><div class="modal-ref">${r.invoice}${r.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div><div class="modal-party">${r.customer}</div></td><td class="modal-due">${r.originalDue || '—'}</td><td class="modal-amt-in">+${fmt(r.amount)}</td></tr>`;
+          });
+          if (invoices.length > 1) {
+            const sub = invoices.reduce((s, r) => s + r.amount, 0);
+            body += `<tr style="background:rgba(126,200,160,0.06)"><td colspan="2" style="padding:6px 10px;font-size:9px;color:var(--green);letter-spacing:0.08em">SUBTOTAL · ${customer}</td><td class="modal-amt-in" style="padding:6px 10px">+${fmt(sub)}</td></tr>`;
+          }
         });
         if (rec.length > 1) body += `<tr class="modal-total-row"><td colspan="2"><span class="modal-total-label">Total receivables</span></td><td class="modal-amt-in">+${fmt(totalIn)}</td></tr>`;
         body += '</tbody></table>';
@@ -1393,12 +1447,31 @@
       if (!pay.length && !(point.recurring > 0)) {
         body += '<div class="modal-empty">No payables due this day</div>';
       } else {
-        body += `<table class="modal-table"><thead><tr><th>Bill / Vendor</th><th>Original Due</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+        body += `<table class="modal-table"><thead><tr><th>Bill / Vendor</th><th>Due Date</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+        // Group by vendor for subtotals
+        const payByVendor = {};
         pay.forEach(p => {
-          body += `<tr><td><div class="modal-ref">${p.bill}${p.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div><div class="modal-party">${p.vendor}</div></td><td class="modal-due">${p.originalDue || '—'}</td><td class="modal-amt-out">−${fmt(p.amount)}</td></tr>`;
+          if (!payByVendor[p.vendor]) payByVendor[p.vendor] = [];
+          payByVendor[p.vendor].push(p);
+        });
+        Object.entries(payByVendor).forEach(([vendor, bills]) => {
+          bills.forEach(p => {
+            body += `<tr><td><div class="modal-ref">${p.bill}${p.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div><div class="modal-party">${p.vendor}</div></td><td class="modal-due">${p.originalDue || '—'}</td><td class="modal-amt-out">−${fmt(p.amount)}</td></tr>`;
+          });
+          if (bills.length > 1) {
+            const sub = bills.reduce((s, p) => s + p.amount, 0);
+            body += `<tr style="background:rgba(224,92,92,0.06)"><td colspan="2" style="padding:6px 10px;font-size:9px;color:var(--red);letter-spacing:0.08em">SUBTOTAL · ${vendor}</td><td class="modal-amt-out" style="padding:6px 10px">−${fmt(sub)}</td></tr>`;
+          }
         });
         if ((point.recurring || 0) > 0) {
-          body += `<tr><td><div class="modal-ref">Recurring Expenses</div><div class="modal-party">Scheduled expenses this day</div></td><td class="modal-due">—</td><td class="modal-amt-out">−${fmt(point.recurring)}</td></tr>`;
+          const recurItems = point.breakdown && point.breakdown.recurItems;
+          if (recurItems && recurItems.length > 0) {
+            recurItems.forEach(ri => {
+              body += `<tr><td><div class="modal-ref">${ri.name}</div><div class="modal-party">${ri.category || 'Recurring Expense'}</div></td><td class="modal-due">Monthly</td><td class="modal-amt-out">−${fmt(ri.amount)}</td></tr>`;
+            });
+          } else {
+            body += `<tr><td><div class="modal-ref">Recurring Expenses</div><div class="modal-party">Scheduled expenses this day</div></td><td class="modal-due">—</td><td class="modal-amt-out">−${fmt(point.recurring)}</td></tr>`;
+          }
         }
         if (pay.length > 1 || (point.recurring || 0) > 0) body += `<tr class="modal-total-row"><td colspan="2"><span class="modal-total-label">Total payables + recurring</span></td><td class="modal-amt-out">−${fmt(totalOut)}</td></tr>`;
         body += '</tbody></table>';
@@ -1455,7 +1528,7 @@
     </div>
 
     <div class="panel">
-      <div class="panel-title">60-Day Projected Balance</div>
+      <div class="panel-title">${data.config.projectionDays}-Day Projected Balance</div>
       <div class="chart-hint">↖ Click any point to see day detail</div>
       <canvas id="projectionChart"></canvas>
     </div>
@@ -1491,7 +1564,8 @@
       const balances = data.projection.map(p => p.balance);
       const recVals = data.projection.map(p => p.receivables);
       const payVals = data.projection.map(p => p.payables + p.recurring); // includes recurring expenses
-      const critical = 10000, warning = 20000;
+      const critical = data.config.criticalThreshold;
+      const warning = data.config.warningThreshold;
 
       const projMax = Math.max(...balances);
       const projMin = Math.min(...balances);
@@ -1510,7 +1584,7 @@
       wrapCanvas('flowChart', 260);
 
       const chartDefaults = {
-        x: { ticks: { color: '#555', font: { family: 'Nunito Sans', size: 9 }, maxTicksLimit: 10 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        x: { ticks: { color: '#888', font: { family: 'Nunito Sans', size: 9 }, maxTicksLimit: 10 }, grid: { color: 'rgba(255,255,255,0.05)' } },
       };
 
       new Chart(document.getElementById('projectionChart'), {
@@ -1527,12 +1601,12 @@
           responsive: true, maintainAspectRatio: false,
           interaction: { mode: 'index', intersect: false },
           plugins: {
-            legend: { labels: { color: '#555', font: { family: 'Nunito Sans', size: 10 }, boxWidth: 12 } },
+            legend: { labels: { color: '#999', font: { family: 'Nunito Sans', size: 10 }, boxWidth: 12 } },
             tooltip: { enabled: false, external: projectionTooltipHandler }
           },
           scales: {
             x: chartDefaults.x,
-            y: { min: yMin, max: yMax, ticks: { color: '#555', font: { family: 'Nunito Sans', size: 9 }, callback: v => 'AED ' + (v / 1000).toFixed(0) + 'k' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            y: { min: yMin, max: yMax, ticks: { color: '#888', font: { family: 'Nunito Sans', size: 9 }, callback: v => 'AED ' + (v / 1000).toFixed(0) + 'k' }, grid: { color: 'rgba(255,255,255,0.05)' } }
           },
           onClick: (evt, elements, chart) => {
             const pts = chart.getElementsAtEventForMode(evt.native, 'index', { intersect: false }, false);
@@ -1562,7 +1636,7 @@
         options: {
           responsive: true, maintainAspectRatio: false,
           plugins: {
-            legend: { labels: { color: '#555', font: { family: 'Nunito Sans', size: 10 }, boxWidth: 12 } },
+            legend: { labels: { color: '#999', font: { family: 'Nunito Sans', size: 10 }, boxWidth: 12 } },
             tooltip: {
               backgroundColor: '#0d0d0d', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, titleColor: '#fff', bodyColor: '#e8e8e8',
               callbacks: { label: ctx => ' ' + ctx.dataset.label + ': AED ' + Math.abs(ctx.parsed.y).toLocaleString('en-AE', { maximumFractionDigits: 0 }) }
@@ -1570,7 +1644,7 @@
           },
           scales: {
             x: chartDefaults.x,
-            y: { min: -flowYMax, max: flowYMax, ticks: { color: '#555', font: { family: 'Nunito Sans', size: 9 }, callback: v => 'AED ' + (v / 1000).toFixed(0) + 'k' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            y: { min: -flowYMax, max: flowYMax, ticks: { color: '#888', font: { family: 'Nunito Sans', size: 9 }, callback: v => 'AED ' + (v / 1000).toFixed(0) + 'k' }, grid: { color: 'rgba(255,255,255,0.05)' } }
           }
         }
       });
@@ -1616,11 +1690,38 @@
       }
     }
 
+    function isAllowedUser(account) {
+      if (!CONFIG.ALLOWED_USERS || CONFIG.ALLOWED_USERS.length === 0) return true; // open if no list defined
+      const email = (account.username || account.upn || '').toLowerCase();
+      return CONFIG.ALLOWED_USERS.map(e => e.toLowerCase()).includes(email);
+    }
+
+    function showAccessDenied(email) {
+      document.getElementById('dashboard').innerHTML = `
+        <div class="login-screen">
+          <div class="logo-box" style="border-color:rgba(224,92,92,0.4)">
+            <img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;">
+          </div>
+          <div class="login-title" style="color:var(--red)">Access Denied</div>
+          <div class="login-sub" style="color:#888">${email} is not authorised to view this dashboard.<br><br>Contact Artisan Ice Co. to request access.</div>
+          <button class="login-btn" onclick="_msal.logoutPopup().then(()=>location.reload())">Sign out</button>
+        </div>`;
+    }
+
     async function init() {
       try {
         await initMsal();
         _token = await getTokenSilent();
-        if (_token) { loadAndRender(); } else { showLogin(); }
+        if (_token) {
+          const accounts = _msal.getAllAccounts();
+          if (accounts.length && !isAllowedUser(accounts[0])) {
+            showAccessDenied(accounts[0].username);
+            return;
+          }
+          loadAndRender();
+        } else {
+          showLogin();
+        }
       } catch (err) {
         document.getElementById('dashboard').innerHTML = '<div class="loading">⚠ Auth error: ' + err.message + '</div>';
       }
