@@ -1318,14 +1318,16 @@
         if (k === 'WarningThreshold' && v > 0) warningThreshold = v;
       });
 
-      // Build recurring expense lookup: dayOfMonth → [{name, amount}]
-      // RecurringExpenses columns: ExpenseName, Amount, DayOfMonth, Category, IsActive, Notes
+      // Build recurring expense lookup
+      // Columns: ExpenseName(0) Amount(1) Month(2) Category(3) IsActive(4) PaymentDate(5)
       const recurMap = {};
-      recurRaw.slice(1).filter(r => r[0] && (r[4] === true || r[4] === 1 || r[4] === 'TRUE')).forEach(r => {
-        const dom = Number(r[2]);
-        if (!dom) return;
-        if (!recurMap[dom]) recurMap[dom] = [];
-        recurMap[dom].push({ name: String(r[0] || 'Recurring'), amount: Number(r[1]) || 0, category: String(r[3] || '') });
+      recurRaw.slice(1).filter(r => r[0] && (r[4] === true || r[4] === 1 || String(r[4]).toUpperCase() === 'TRUE')).forEach(r => {
+        const exactDate = toDateStr(r[5]);  // PaymentDate col
+        const entry = { name: String(r[0] || 'Recurring'), amount: Number(r[1]) || 0, category: String(r[3] || ''), monthName: String(r[2] || '') };
+        if (exactDate) {
+          if (!recurMap[exactDate]) recurMap[exactDate] = [];
+          recurMap[exactDate].push(entry);
+        }
       });
 
       const ACTIVE_REC_STATUSES = ['sent', 'unpaid', 'overdue', 'partially_paid'];
@@ -1367,9 +1369,8 @@
           dateFull = fmtDateDisplay(row[0]);
         }
 
-        // Get recurring expense names for this day-of-month
-        const dom = rowDateStr ? parseInt(rowDateStr.split('-')[2], 10) : 0;
-        const dayRecurItems = (recurMap && recurMap[dom]) ? recurMap[dom] : [];
+        // Get recurring items by exact payment date
+        const dayRecurItems = (recurMap && recurMap[rowDateStr]) ? recurMap[rowDateStr] : [];
 
         return {
           date: dateShort, fullDate: dateFull,
@@ -1472,7 +1473,8 @@
         if (recurItems.length > 0) {
           body += '<div class="pt-section-label">Cash Out · Recurring Expenses</div>';
           recurItems.forEach(ri => {
-            body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">${ri.name}</div><div class="pt-name">${ri.category || 'Recurring'}</div></div><span class="pt-amount out">${fmt(ri.amount)}</span></div>`;
+            const meta = ri.monthName ? ri.monthName : (ri.category || 'Recurring');
+            body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">${ri.name}</div><div class="pt-name">${meta}</div></div><span class="pt-amount out">${fmt(ri.amount)}</span></div>`;
           });
         }
       }
@@ -1575,7 +1577,8 @@
         });
         if (modalRecurItems.length > 0) {
           modalRecurItems.forEach(ri => {
-            body += `<tr><td><div class="modal-ref">${ri.name}</div><div class="modal-party">${ri.category || 'Recurring Expense'}</div></td><td class="modal-due">Monthly</td><td class="modal-amt-out">−${fmt(ri.amount)}</td></tr>`;
+            const meta = [ri.category, ri.monthName].filter(Boolean).join(' · ') || 'Recurring';
+            body += `<div class="modal-group" style="margin-top:2px"><div class="modal-group-summary" style="cursor:default"><span class="modal-group-name">${ri.name}</span><span class="modal-group-meta">${meta}</span><span class="modal-group-amt out">−${fmt(ri.amount)}</span></div></div>`;
           });
         }
         if (pay.length > 1 || modalRecurItems.length > 0) body += `<div class="modal-group-total"><span class="modal-total-label">Total payables + recurring</span><span class="modal-amt-out">−${fmt(totalOut)}</span></div>`;
