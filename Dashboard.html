@@ -1271,9 +1271,43 @@
     }
 
     async function getSheet(name) {
+      // Try path-based access first (more reliable for SharePoint)
       const d = await graphGet('/drives/' + CONFIG.DRIVE_ID + '/items/' + CONFIG.FILE_ID +
         '/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange');
       return d.values || [];
+    }
+
+    async function graphGetWithRetry(path) {
+      // Try current FILE_ID, then fallback to alternate encodings
+      const altIds = [
+        CONFIG.FILE_ID,
+        'ZLWHNh1bQkKsWuCEFRH8VQ',  // straight base64url
+        '64B58736-1D5B-4242-AC5A-E0841511FC55'  // raw GUID
+      ];
+      const altDrives = [
+        CONFIG.DRIVE_ID,
+        'b!hBEjx3L-RUGW2E2Gbikr_wjU2C5_b6dUK-P4bVY4Q3Tw'  // alt site guid
+      ];
+      for (const driveId of altDrives) {
+        for (const fileId of altIds) {
+          try {
+            const testPath = path.replace(CONFIG.DRIVE_ID, driveId).replace(CONFIG.FILE_ID, fileId);
+            const r = await fetch('https://graph.microsoft.com/v1.0' + testPath, {
+              headers: { Authorization: 'Bearer ' + _token }
+            });
+            if (r.ok) {
+              // Found working combo — update CONFIG
+              CONFIG.DRIVE_ID = driveId;
+              CONFIG.FILE_ID = fileId;
+              console.log('Working DRIVE_ID:', driveId, 'FILE_ID:', fileId);
+              return r.json();
+            }
+            const err = await r.json().catch(() => ({}));
+            console.log('Tried DRIVE:', driveId.substring(0,20), 'FILE:', fileId.substring(0,20), '→', r.status, err?.error?.code);
+          } catch(e) { console.log('Fetch error:', e.message); }
+        }
+      }
+      throw new Error('Could not access Excel file — tried all ID combinations');
     }
 
 
@@ -1311,6 +1345,11 @@
     }
 
     async function getDashboardData() {
+      // First call uses retry logic to find working ID combination
+      const testPath = '/drives/' + CONFIG.DRIVE_ID + '/items/' + CONFIG.FILE_ID +
+        '/workbook/worksheets/' + encodeURIComponent('Config') + '/usedRange';
+      await graphGetWithRetry(testPath).catch(() => {});
+
       const [recRaw, payRaw, bankRaw, projRaw, cfgRaw, recurRaw] = await Promise.all([
         getSheet('Receivables'), getSheet('Payables'),
         getSheet('BankBalances'), getSheet('Projection'),
