@@ -1227,7 +1227,7 @@
       const accounts = _msal.getAllAccounts();
       if (!accounts.length) return null;
       try {
-        const r = await _msal.acquireTokenSilent({ scopes: ['Files.Read'], account: accounts[0] });
+        const r = await _msal.acquireTokenSilent({ scopes: ['Files.Read', 'Sites.Read.All'], account: accounts[0] });
         return r.accessToken;
       } catch (e) { return null; }
     }
@@ -1246,7 +1246,7 @@
         const btn = document.getElementById('signInBtn');
         btn.textContent = 'Signing in...'; btn.disabled = true;
         try {
-          const r = await _msal.loginPopup({ scopes: ['Files.Read'] });
+          const r = await _msal.loginPopup({ scopes: ['Files.Read', 'Sites.Read.All'] });
           _token = r.accessToken;
           if (!isAllowedUser(r.account)) {
             showAccessDenied(r.account.username);
