@@ -1191,6 +1191,7 @@
       FILE_ID: 'Noe1ZFsdQkKsWuCEFRH8VQ',
       SITE_ID: 'artisaniceco.sharepoint.com,efad93e0-484a-48d0-8231-637401c87c10,c7231184-fe72-4145-96d8-4d866e292bff',
       FILE_PATH: 'Cashflow/ZealantUAE_CashFlow.xlsx',
+      SHARE_TOKEN: 'u!aHR0cHM6Ly9hcnRpc2FuaWNlY28uc2hhcmVwb2ludC5jb20vc2l0ZXMvQXJ0aXNhbkljZUNvL1NoYXJlZCBEb2N1bWVudHMvQ2FzaGZsb3cvWmVhbGFudFVBRV9DYXNoRmxvdy54bHN4',
       REDIRECT: 'https://artisan-ice.github.io/artisan-dashboard/',
       FLOW_URL: 'https://default07b046b36a824b7ba260d152326e55.8f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/41b56361ff5b4de0af17d6c15f7acfca/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=88dr1aIPYgvJiidsvRBjvb9HKAdJinU3uf6ZKuSizJ0',
       // ── Allowed users — add/remove emails here ──────────────
@@ -1227,7 +1228,7 @@
       const accounts = _msal.getAllAccounts();
       if (!accounts.length) return null;
       try {
-        const r = await _msal.acquireTokenSilent({ scopes: ['Files.Read', 'Sites.Read.All'], account: accounts[0] });
+        const r = await _msal.acquireTokenSilent({ scopes: ['Files.Read'], account: accounts[0] });
         return r.accessToken;
       } catch (e) { return null; }
     }
@@ -1246,7 +1247,7 @@
         const btn = document.getElementById('signInBtn');
         btn.textContent = 'Signing in...'; btn.disabled = true;
         try {
-          const r = await _msal.loginPopup({ scopes: ['Files.Read', 'Sites.Read.All'] });
+          const r = await _msal.loginPopup({ scopes: ['Files.Read'] });
           _token = r.accessToken;
           if (!isAllowedUser(r.account)) {
             showAccessDenied(r.account.username);
@@ -1274,9 +1275,8 @@
 
     async function getSheet(name) {
       const d = await graphGet(
-        '/sites/' + CONFIG.SITE_ID +
-        '/drive/root:/' + CONFIG.FILE_PATH +
-        ':/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange'
+        '/shares/' + CONFIG.SHARE_TOKEN +
+        '/driveItem/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange'
       );
       return d.values || [];
     }
