@@ -1189,6 +1189,8 @@
       TENANT_ID: '07b046b3-6a82-4b7b-a260-d152326e558f',
       DRIVE_ID: 'b!4JOt70pI0EiCMWN0Ach8EAjU2C5_b6dUK-P4bVY4Q3Tw',
       FILE_ID: 'Noe1ZFsdQkKsWuCEFRH8VQ',
+      SITE_ID: 'artisaniceco.sharepoint.com,efad93e0-484a-48d0-8231-637401c87c10,c7231184-fe72-4145-96d8-4d866e292bff',
+      FILE_PATH: 'Cashflow/ZealantUAE_CashFlow.xlsx',
       REDIRECT: 'https://artisan-ice.github.io/artisan-dashboard/',
       FLOW_URL: 'https://default07b046b36a824b7ba260d152326e55.8f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/41b56361ff5b4de0af17d6c15f7acfca/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=88dr1aIPYgvJiidsvRBjvb9HKAdJinU3uf6ZKuSizJ0',
       // ── Allowed users — add/remove emails here ──────────────
@@ -1271,9 +1273,11 @@
     }
 
     async function getSheet(name) {
-      // Try path-based access first (more reliable for SharePoint)
-      const d = await graphGet('/drives/' + CONFIG.DRIVE_ID + '/items/' + CONFIG.FILE_ID +
-        '/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange');
+      const d = await graphGet(
+        '/sites/' + CONFIG.SITE_ID +
+        '/drive/root:/' + CONFIG.FILE_PATH +
+        ':/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange'
+      );
       return d.values || [];
     }
 
