@@ -1380,8 +1380,10 @@
     function buildTooltipHTML(point) {
       const rec = point.breakdown.receivables;
       const pay = point.breakdown.payables;
-      const net = point.receivables - point.payables;
-      const hasMovements = rec.length > 0 || pay.length > 0;
+      const recurItems = (point.breakdown && point.breakdown.recurItems) || [];
+      const hasRecurring = (point.recurring || 0) > 0;
+      const net = point.receivables - point.payables - (point.recurring || 0);
+      const hasMovements = rec.length > 0 || pay.length > 0 || hasRecurring;
       const balClass = point.status === 'Critical' ? 'critical' : point.status === 'Warning' ? 'warning' : 'healthy';
 
       let body = '';
@@ -1390,19 +1392,39 @@
       } else {
         if (rec.length > 0) {
           body += '<div class="pt-section-label">Cash In · Receivables</div>';
-          rec.forEach(r => {
-            body += `<div class="pt-row"><span class="pt-sign in">+</span><div class="pt-info"><div class="pt-ref">${r.invoice}${r.overdue ? '<span class="pt-overdue-tag">OVERDUE</span>' : ''}</div><div class="pt-name">${r.customer}</div></div><span class="pt-amount in">${fmt(r.amount)}</span></div>`;
+          // Group by customer
+          const recByCust = {};
+          rec.forEach(r => { if (!recByCust[r.customer]) recByCust[r.customer] = []; recByCust[r.customer].push(r); });
+          Object.entries(recByCust).forEach(([cust, invs]) => {
+            const sub = invs.reduce((s, r) => s + r.amount, 0);
+            const hasOD = invs.some(r => r.overdue);
+            body += `<div class="pt-row"><span class="pt-sign in">+</span><div class="pt-info"><div class="pt-ref">${cust}${hasOD ? '<span class="pt-overdue-tag">OVERDUE</span>' : ''}</div><div class="pt-name">${invs.length} invoice${invs.length > 1 ? 's' : ''}</div></div><span class="pt-amount in">${fmt(sub)}</span></div>`;
           });
         }
         if (pay.length > 0) {
           body += '<div class="pt-section-label">Cash Out · Payables</div>';
-          pay.forEach(p => {
-            body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">${p.bill}${p.overdue ? '<span class="pt-overdue-tag">OVERDUE</span>' : ''}</div><div class="pt-name">${p.vendor}</div></div><span class="pt-amount out">${fmt(p.amount)}</span></div>`;
+          // Group by vendor
+          const payByVend = {};
+          pay.forEach(p => { if (!payByVend[p.vendor]) payByVend[p.vendor] = []; payByVend[p.vendor].push(p); });
+          Object.entries(payByVend).forEach(([vend, bills]) => {
+            const sub = bills.reduce((s, p) => s + p.amount, 0);
+            const hasOD = bills.some(p => p.overdue);
+            body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">${vend}${hasOD ? '<span class="pt-overdue-tag">OVERDUE</span>' : ''}</div><div class="pt-name">${bills.length} bill${bills.length > 1 ? 's' : ''}</div></div><span class="pt-amount out">${fmt(sub)}</span></div>`;
           });
         }
-        if ((point.recurring || 0) > 0) {
+        if (hasRecurring) {
           body += '<div class="pt-section-label">Cash Out · Recurring</div>';
-          body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">Recurring Expenses</div></div><span class="pt-amount out">${fmt(point.recurring)}</span></div>`;
+          if (recurItems.length > 0) {
+            // Group by category
+            const byCat = {};
+            recurItems.filter(r => r.amount > 0).forEach(r => { const k = r.category || 'Recurring'; if (!byCat[k]) byCat[k] = []; byCat[k].push(r); });
+            Object.entries(byCat).forEach(([cat, items]) => {
+              const sub = items.reduce((s, r) => s + r.amount, 0);
+              body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">${cat}</div><div class="pt-name">${items.length} item${items.length > 1 ? 's' : ''}</div></div><span class="pt-amount out">${fmt(sub)}</span></div>`;
+            });
+          } else {
+            body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">Recurring Expenses</div></div><span class="pt-amount out">${fmt(point.recurring)}</span></div>`;
+          }
         }
       }
 
@@ -1422,16 +1444,22 @@
       const point = window._projData[idx];
       if (!point) return;
       card.innerHTML = buildTooltipHTML(point);
-      const pad = 16, tw = tooltip.offsetWidth || 280, th = tooltip.offsetHeight || 200;
-      const winW = window.innerWidth, winH = window.innerHeight;
-      const rect = context.chart.canvas.getBoundingClientRect();
-      let x = rect.left + context.tooltip.caretX + 20;
-      let y = rect.top + context.tooltip.caretY - th / 2;
-      if (x + tw > winW - pad) x = rect.left + context.tooltip.caretX - tw - 20;
-      if (y < pad) y = pad;
-      if (y + th > winH - pad) y = winH - th - pad;
-      tooltip.style.left = x + 'px'; tooltip.style.top = y + 'px';
-      tooltip.classList.add('visible');
+      // Position after render so we get actual dimensions
+      requestAnimationFrame(() => {
+        const pad = 16;
+        const tw = tooltip.offsetWidth || 300;
+        const th = tooltip.offsetHeight || 220;
+        const winW = window.innerWidth, winH = window.innerHeight;
+        const rect = context.chart.canvas.getBoundingClientRect();
+        let x = rect.left + context.tooltip.caretX + 20;
+        let y = rect.top + context.tooltip.caretY - th / 2;
+        if (x + tw > winW - pad) x = rect.left + context.tooltip.caretX - tw - 20;
+        if (x < pad) x = pad;
+        if (y < pad) y = pad;
+        if (y + th > winH - pad) y = winH - th - pad;
+        tooltip.style.left = x + 'px'; tooltip.style.top = y + 'px';
+        tooltip.classList.add('visible');
+      });
     }
 
     // ═══════════════════════════════════════════════════════
