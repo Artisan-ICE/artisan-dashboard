@@ -1188,7 +1188,8 @@
       CLIENT_ID:  '7fac838d-cace-4a69-822d-64db84c8a494',
       TENANT_ID:  '07b046b3-6a82-4b7b-a260-d152326e558f',
       DRIVE_ID:   'b!Yu_GdB9_zUyCHoaXZOr7VPo5LcETvW1ElxX_aIwAk5siEXTO4qIeQK0XXlByz4mz',
-      FILE_ID:    'AB813CEA-49C8-4B16-AF2A-D0EB368F5E5D',
+      FILE_ID:    'CA9B2C60-6BBE-45E8-BE5D-3519E370787A',
+      // File location: personal OneDrive of accounts@artisaniceco.com → Cashflow/ZealantUAE_CashFlow.xlsx
       REDIRECT:   'https://artisan-ice.github.io/artisan-dashboard/',
       FLOW_URL:   'https://default07b046b36a824b7ba260d152326e55.8f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/41b56361ff5b4de0af17d6c15f7acfca/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=88dr1aIPYgvJiidsvRBjvb9HKAdJinU3uf6ZKuSizJ0',
       ALLOWED_USERS: [
@@ -1283,28 +1284,12 @@
     }
 
     async function getSheet(name) {
-      // Try multiple share token formats until one works
-      const shareTokens = [
-        'u!aHR0cHM6Ly9hcnRpc2FuaWNlY28uc2hhcmVwb2ludC5jb20vOng6L3Ivc2l0ZXMvQXJ0aXNhbkljZUNvL19sYXlvdXRzLzE1L0RvYy5hc3B4P3NvdXJjZWRvYz0lN0I2NEI1ODczNi0xRDVCLTQyNDItQUM1QS1FMDg0MTUxMUZDNTUlN0QmZmlsZT1aZWFsYW50VUFFX0Nhc2hGbG93Lnhsc3gmYWN0aW9uPWRlZmF1bHQmbW9iaWxlcmVkaXJlY3Q9dHJ1ZQ',
-        'u!aHR0cHM6Ly9hcnRpc2FuaWNlY28uc2hhcmVwb2ludC5jb20vc2l0ZXMvQXJ0aXNhbkljZUNvL19sYXlvdXRzLzE1L0RvYy5hc3B4P3NvdXJjZWRvYz17NjRCNTg3MzYtMUQ1Qi00MjQyLUFDNUEtRTA4NDE1MTFGQzU1fQ'
-      ];
-      let lastErr = null;
-      for (const token of shareTokens) {
-        try {
-          const d = await graphGet('/shares/' + token + '/driveItem/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange');
-          if (d.values) {
-            // Cache the working token
-            window._workingShareToken = token;
-            return d.values;
-          }
-        } catch(e) { lastErr = e; }
-      }
-      // If we found a working token previously, use it directly
-      if (window._workingShareToken) {
-        const d = await graphGet('/shares/' + window._workingShareToken + '/driveItem/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange');
-        return d.values || [];
-      }
-      throw lastErr || new Error('All share tokens failed');
+      const d = await graphGet(
+        '/drives/' + CONFIG.DRIVE_ID +
+        '/items/' + CONFIG.FILE_ID +
+        '/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange'
+      );
+      return d.values || [];
     }
 
 
