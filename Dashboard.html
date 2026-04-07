@@ -1384,7 +1384,7 @@
       body += '</div>';
 
       body += `<div><div class="modal-section-title"><span class="ms-dot out"></span>Cash Out · Payables</div>`;
-      if (!pay.length) {
+      if (!pay.length && !(point.recurring > 0)) {
         body += '<div class="modal-empty">No payables due this day</div>';
       } else {
         body += `<table class="modal-table"><thead><tr><th>Bill / Vendor</th><th>Original Due</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
@@ -1395,10 +1395,6 @@
           body += `<tr><td><div class="modal-ref">Recurring Expenses</div><div class="modal-party">Daily recurring</div></td><td class="modal-due">—</td><td class="modal-amt-out">−${fmt(point.recurring)}</td></tr>`;
         }
         if (pay.length > 1 || (point.recurring || 0) > 0) body += `<tr class="modal-total-row"><td colspan="2"><span class="modal-total-label">Total payables + recurring</span></td><td class="modal-amt-out">−${fmt(totalOut)}</td></tr>`;
-        body += '</tbody></table>';
-      } else if ((point.recurring || 0) > 0) {
-        body += `<table class="modal-table"><thead><tr><th>Description</th><th>Date</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
-        body += `<tr><td><div class="modal-ref">Recurring Expenses</div></td><td class="modal-due">—</td><td class="modal-amt-out">−${fmt(point.recurring)}</td></tr>`;
         body += '</tbody></table>';
       }
       body += '</div>';
