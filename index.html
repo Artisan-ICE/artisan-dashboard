@@ -1261,24 +1261,18 @@
     }
 
     async function getSheet(name) {
-      // Find the file via search on first call, cache the webUrl-based path
       if (!window._fileWorkbookPath) {
-        // Search for the file by name
-        const searchRes = await graphGet(
-          '/sites/artisaniceco.sharepoint.com,efad93e0-484a-48d0-8231-637401c87c10,c7231184-fe72-4145-96d8-4d866e292bff/drive/root/search(q='Artisan_Zoho_CashFlow')'
-        );
+        const q = encodeURIComponent("'Artisan_Zoho_CashFlow'");
+        const siteId = 'artisaniceco.sharepoint.com,efad93e0-484a-48d0-8231-637401c87c10,c7231184-fe72-4145-96d8-4d866e292bff';
+        const searchRes = await graphGet('/sites/' + siteId + '/drive/root/search(q=' + q + ')');
         const items = searchRes.value || [];
         console.log('Search found', items.length, 'items');
-        const file = items.find(i => i.name && i.name.includes('Artisan_Zoho_CashFlow'));
-        if (!file) throw new Error('File not found via search');
-        // Build path using driveId and id from search result
+        const file = items.find(function(i) { return i.name && i.name.includes('Artisan_Zoho_CashFlow'); });
+        if (!file) throw new Error('File not found via search. Items: ' + items.map(function(i){return i.name;}).join(', '));
         window._fileWorkbookPath = '/drives/' + file.parentReference.driveId + '/items/' + file.id;
         console.log('Found file:', file.name, 'driveId:', file.parentReference.driveId, 'id:', file.id);
       }
-      const d = await graphGet(
-        window._fileWorkbookPath +
-        '/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange'
-      );
+      const d = await graphGet(window._fileWorkbookPath + '/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange');
       return d.values || [];
     }
 
