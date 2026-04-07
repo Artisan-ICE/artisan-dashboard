@@ -1159,13 +1159,11 @@
     const CONFIG = {
       CLIENT_ID:      '7fac838d-cace-4a69-822d-64db84c8a494',
       TENANT_ID:      '07b046b3-6a82-4b7b-a260-d152326e558f',
-      DRIVE_ID:       'b!Yu_GdB9_zUyCHoaXZOr7VPo5LcETvW1ElxX_aIwAk5siEXTO4qIeQK0XXlByz4mz',
-      FILE_ID:        'CA9B2C60-6BBE-45E8-BE5D-3519E370787A',
+      SITE_ID:        'artisaniceco.sharepoint.com,efad93e0-484a-48d0-8231-637401c87c10,c7231184-fe72-4145-96d8-4d866e292bff',
+      FILE_PATH:      'Cashflow/ZealantUAE_CashFlow.xlsx',
       REDIRECT:       'https://artisan-ice.github.io/artisan-dashboard/',
       FLOW_URL:       'https://default07b046b36a824b7ba260d152326e55.8f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/41b56361ff5b4de0af17d6c15f7acfca/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=88dr1aIPYgvJiidsvRBjvb9HKAdJinU3uf6ZKuSizJ0',
       // ── Access control ─────────────────────────────────────
-      // All @artisaniceco.com accounts are allowed automatically
-      // To restrict to specific emails instead, add them to ALLOWED_EMAILS
       ALLOWED_DOMAIN: 'artisaniceco.com',
       ALLOWED_EMAILS: ['sreepadh2002@gmail.com'] // add more emails here as needed
     };
@@ -1196,7 +1194,7 @@
       const accounts = _msal.getAllAccounts();
       if (!accounts.length) return null;
       try {
-        const r = await _msal.acquireTokenSilent({ scopes: ['Files.Read'], account: accounts[0] });
+        const r = await _msal.acquireTokenSilent({ scopes: ['Files.Read', 'Sites.Read.All'], account: accounts[0] });
         return r.accessToken;
       } catch (e) { return null; }
     }
@@ -1238,7 +1236,7 @@
         const btn = document.getElementById('signInBtn');
         btn.textContent = 'Signing in...'; btn.disabled = true;
         try {
-          const r = await _msal.loginPopup({ scopes: ['Files.Read'] });
+          const r = await _msal.loginPopup({ scopes: ['Files.Read', 'Sites.Read.All'] });
           _token = r.accessToken;
           if (!isAllowed(r.account)) { showAccessDenied(r.account.username); return; }
           loadAndRender();
@@ -1262,8 +1260,11 @@
     }
 
     async function getSheet(name) {
-      const d = await graphGet('/drives/' + CONFIG.DRIVE_ID + '/items/' + CONFIG.FILE_ID +
-        '/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange');
+      const d = await graphGet(
+        '/sites/' + CONFIG.SITE_ID +
+        '/drive/root:/' + CONFIG.FILE_PATH +
+        ':/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange'
+      );
       return d.values || [];
     }
 
