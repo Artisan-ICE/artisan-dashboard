@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cash Flow — Artisan Ice Co.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    /* ═══════════════════════════════════════════════════
+   ARTISAN ICE CO. — CASH FLOW DASHBOARD
+   Visual: artisaniceco.com
+   Data: Microsoft Graph API → Excel on SharePoint
+   ═══════════════════════════════════════════════════ */
+
+    :root {
+      --bg: #000000;
+      --surface: #0d0d0d;
+      --surface2: #111111;
+      --border: rgba(255, 255, 255, 0.1);
+      --border2: rgba(255, 255, 255, 0.06);
+      --white: #ffffff;
+      --text: #e8e8e8;
+      --dim: #666666;
+      --red: #e05c5c;
+      --green: #7ec8a0;
+      --amber: #e8a838;
+      --serif: "Times New Roman", serif;
+      --sans: "Nunito Sans", sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-weight: 300;
+      padding: 32px;
+      overflow-x: hidden;
+    }
+
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 36px;
+    }
+
+    .logo-block {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .logo-box {
+      border: 1px solid rgba(142, 202, 230, 0.5);
+      padding: 8px 10px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-text {
+      font-family: var(--serif);
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--white);
+      line-height: 1.6;
+    }
+
+    .header-title h1 {
+      font-family: var(--serif);
+      font-size: 2rem;
+      font-weight: 400;
+      color: var(--white);
+      letter-spacing: -0.01em;
+      line-height: 1;
+    }
+
+    .header-title h1 em {
+      font-style: italic;
+    }
+
+    .header-sub {
+      font-size: 9px;
+      color: var(--dim);
+      margin-top: 7px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      background: var(--white);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    .header-right {
+      text-align: right;
+      font-size: 9px;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+    }
+
+    .header-right .sync-time {
+      color: var(--white);
+      font-family: var(--serif);
+      font-size: 13px;
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* ── ALERT BAR ── */
+    .alert-bar {
+      border: 1px solid rgba(224, 92, 92, 0.3);
+      background: rgba(224, 92, 92, 0.04);
+      padding: 16px 22px;
+      margin-bottom: 28px;
+      display: flex;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .alert-title {
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 3px;
+    }
+
+    .alert-value {
+      font-family: var(--serif);
+      font-size: 1.2rem;
+      color: var(--red);
+    }
+
+    .alert-note {
+      margin-left: auto;
+      font-size: 9px;
+      color: rgba(224, 92, 92, 0.6);
+    }
+
+    /* ── KPI GRID ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+
+    .kpi {
+      background: var(--bg);
+      padding: 24px 22px;
+      position: relative;
+      transition: background 0.15s;
+    }
+
+    .kpi:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .kpi::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+    }
+
+    .kpi.white::after {
+      background: var(--white);
+    }
+
+    .kpi.green::after {
+      background: var(--green);
+    }
+
+    .kpi.red::after {
+      background: var(--red);
+    }
+
+    .kpi.amber::after {
+      background: var(--amber);
+    }
+
+    .kpi.blue::after {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    .kpi-label {
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 12px;
+    }
+
+    .kpi-value {
+      font-family: var(--serif);
+      font-size: 1.7rem;
+      font-weight: 400;
+      line-height: 1;
+      color: var(--white);
+    }
+
+    .kpi-value.green {
+      color: var(--green);
+    }
+
+    .kpi-value.red {
+      color: var(--red);
+    }
+
+    .kpi-value.amber {
+      color: var(--amber);
+    }
+
+    .kpi-sub {
+      font-size: 9px;
+      color: var(--dim);
+      margin-top: 8px;
+    }
+
+    /* ── PANELS ── */
+    .panel {
+      border: 1px solid var(--border);
+      padding: 26px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .panel-title {
+      font-size: 8px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border2);
+    }
+
+    .chart-hint {
+      font-size: 8px;
+      color: var(--dim);
+      text-align: right;
+      margin-top: -14px;
+      margin-bottom: 10px;
+    }
+
+    #projectionChart {
+      cursor: pointer;
+    }
+
+    /* ── TWO COL ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* ── BANK LIST ── */
+    .bank-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--border2);
+    }
+
+    .bank-item {
+      background: var(--bg);
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .bank-name {
+      font-size: 11px;
+      color: var(--dim);
+    }
+
+    .bank-balance {
+      font-family: var(--serif);
+      font-size: 1.1rem;
+      color: var(--white);
+    }
+
+    /* ── TABLES ── */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--dim);
+      font-weight: 400;
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .data-table td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border2);
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .data-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 8px;
+      letter-spacing: 0.08em;
+      border: 1px solid;
+    }
+
+    .badge.overdue {
+      border-color: rgba(224, 92, 92, 0.4);
+      color: var(--red);
+      background: rgba(224, 92, 92, 0.05);
+    }
+
+    .badge.soon {
+      border-color: rgba(232, 168, 56, 0.4);
+      color: var(--amber);
+      background: rgba(232, 168, 56, 0.05);
+    }
+
+    .badge.ok {
+      border-color: rgba(126, 200, 160, 0.4);
+      color: var(--green);
+      background: rgba(126, 200, 160, 0.05);
+    }
+
+    .amount-green {
+      color: var(--green);
+      font-family: var(--serif);
+    }
+
+    .amount-red {
+      color: var(--red);
+      font-family: var(--serif);
+    }
+
+    /* ── TOOLTIP ── */
+    #projTooltip {
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      min-width: 260px;
+      max-width: 340px;
+    }
+
+    #projTooltip.visible {
+      opacity: 1;
+    }
+
+    .pt-card {
+      background: #090909;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+    }
+
+    .pt-header {
+      background: #111;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .pt-date {
+      font-family: var(--serif);
+      font-size: 0.9rem;
+      color: var(--white);
+    }
+
+    .pt-day {
+      font-size: 9px;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .pt-balance {
+      font-family: var(--serif);
+      font-size: 1rem;
+    }
+
+    .pt-balance.healthy {
+      color: var(--green);
+    }
+
+    .pt-balance.warning {
+      color: var(--amber);
+    }
+
+    .pt-balance.critical {
+      color: var(--red);
+    }
+
+    .pt-body {
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .pt-empty {
+      font-size: 10px;
+      color: var(--dim);
+      text-align: center;
+      padding: 8px 0;
+    }
+
+    .pt-section-label {
+      font-size: 8px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-top: 6px;
+      margin-bottom: 2px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .pt-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 4px 0;
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+    .pt-sign {
+      font-family: var(--serif);
+      font-size: 11px;
+      width: 14px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .pt-sign.in {
+      color: var(--green);
+    }
+
+    .pt-sign.out {
+      color: var(--red);
+    }
+
+    .pt-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .pt-ref {
+      color: var(--white);
+      font-size: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pt-name {
+      color: var(--dim);
+      font-size: 9px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pt-amount {
+      font-family: var(--serif);
+      font-size: 11px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .pt-amount.in {
+      color: var(--green);
+    }
+
+    .pt-amount.out {
+      color: var(--red);
+    }
+
+    .pt-overdue-tag {
+      display: inline-block;
+      background: rgba(224, 92, 92, 0.12);
+      color: var(--red);
+      border: 1px solid rgba(224, 92, 92, 0.3);
+      font-size: 8px;
+      padding: 1px 4px;
+      vertical-align: middle;
+      margin-left: 4px;
+    }
+
+    .pt-footer {
+      background: #070707;
+      border-top: 1px solid var(--border2);
+      padding: 7px 14px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      color: var(--dim);
+    }
+
+    .pt-net {
+      font-family: var(--serif);
+      font-size: 11px;
+    }
+
+    .pt-net.positive {
+      color: var(--green);
+    }
+
+    .pt-net.negative {
+      color: var(--red);
+    }
+
+    .pt-net.zero {
+      color: var(--dim);
+    }
+
+    /* ── MODAL ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(0, 0, 0, 0.88);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: #0a0a0a;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      width: 560px;
+      max-width: calc(100vw - 32px);
+      max-height: calc(100vh - 64px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.9);
+      transform: translateY(12px);
+      transition: transform 0.2s, opacity 0.2s;
+      opacity: 0;
+    }
+
+    .modal-backdrop.open .modal {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .modal-header {
+      background: #111;
+      padding: 18px 22px 16px;
+      border-bottom: 1px solid var(--border2);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .modal-date {
+      font-family: var(--serif);
+      font-size: 1.4rem;
+      font-weight: 400;
+      color: var(--white);
+      line-height: 1;
+    }
+
+    .modal-date em {
+      font-style: italic;
+    }
+
+    .modal-meta {
+      font-size: 9px;
+      color: var(--dim);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 5px;
+    }
+
+    .modal-close {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--dim);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: border-color 0.15s, color 0.15s;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .modal-close:hover {
+      border-color: var(--white);
+      color: var(--white);
+    }
+
+    .modal-stats {
+      display: flex;
+      border-bottom: 1px solid var(--border2);
+      flex-shrink: 0;
+    }
+
+    .modal-stat {
+      flex: 1;
+      padding: 12px 18px;
+      border-right: 1px solid var(--border2);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .modal-stat:last-child {
+      border-right: none;
+    }
+
+    .modal-stat-label {
+      font-size: 8px;
+      color: var(--dim);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .modal-stat-value {
+      font-family: var(--serif);
+      font-size: 1.05rem;
+      color: var(--white);
+    }
+
+    .modal-stat-value.green {
+      color: var(--green);
+    }
+
+    .modal-stat-value.red {
+      color: var(--red);
+    }
+
+    .modal-stat-value.amber {
+      color: var(--amber);
+    }
+
+    .modal-body {
+      overflow-y: auto;
+      padding: 16px 22px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-body::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb {
+      background: var(--border);
+    }
+
+    .modal-section-title {
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-section-title .ms-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .modal-section-title .ms-dot.in {
+      background: var(--green);
+    }
+
+    .modal-section-title .ms-dot.out {
+      background: var(--red);
+    }
+
+    .modal-section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border2);
+    }
+
+    .modal-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .modal-table th {
+      text-align: left;
+      padding: 6px 10px;
+      font-size: 8px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      font-weight: 400;
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .modal-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle;
+    }
+
+    .modal-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .modal-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .modal-ref {
+      color: var(--white);
+      font-size: 11px;
+    }
+
+    .modal-party {
+      color: var(--dim);
+      font-size: 10px;
+      margin-top: 1px;
+    }
+
+    .modal-due {
+      color: var(--dim);
+      font-size: 10px;
+    }
+
+    .modal-amt-in {
+      color: var(--green);
+      font-family: var(--serif);
+      font-size: 13px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .modal-amt-out {
+      color: var(--red);
+      font-family: var(--serif);
+      font-size: 13px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .modal-overdue-tag {
+      display: inline-block;
+      background: rgba(224, 92, 92, 0.1);
+      color: var(--red);
+      border: 1px solid rgba(224, 92, 92, 0.3);
+      font-size: 8px;
+      padding: 1px 4px;
+      vertical-align: middle;
+      margin-left: 5px;
+    }
+
+    .modal-total-row td {
+      padding: 8px 10px;
+      border-top: 1px solid var(--border);
+      border-bottom: none;
+      background: #070707 !important;
+    }
+
+    .modal-total-label {
+      font-size: 8px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    .modal-empty {
+      font-size: 10px;
+      color: var(--dim);
+      text-align: center;
+      padding: 14px 0;
+    }
+
+    .modal-net-bar {
+      background: #070707;
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .modal-net-label {
+      font-size: 9px;
+      color: var(--dim);
+    }
+
+    .modal-net-sub {
+      font-size: 8px;
+      color: rgba(255, 255, 255, 0.2);
+      margin-top: 2px;
+    }
+
+    .modal-net-value {
+      font-family: var(--serif);
+      font-size: 1.1rem;
+    }
+
+    .modal-net-value.positive {
+      color: var(--green);
+    }
+
+    .modal-net-value.negative {
+      color: var(--red);
+    }
+
+    .modal-net-value.zero {
+      color: var(--dim);
+    }
+
+    /* ── LOGIN ── */
+    .login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 80vh;
+      gap: 22px;
+    }
+
+    .login-title {
+      font-family: var(--serif);
+      font-size: 2rem;
+      font-weight: 400;
+      color: var(--white);
+    }
+
+    .login-title em {
+      font-style: italic;
+    }
+
+    .login-sub {
+      font-size: 9px;
+      color: var(--dim);
+      letter-spacing: 0.15em;
+      text-align: center;
+      max-width: 300px;
+      line-height: 2;
+    }
+
+    .login-btn {
+      border: 1px solid var(--white);
+      background: transparent;
+      color: var(--white);
+      font-family: var(--sans);
+      font-size: 9px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      padding: 13px 30px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .login-btn:hover {
+      background: var(--white);
+      color: var(--bg);
+    }
+
+    .login-err {
+      font-size: 9px;
+      color: var(--red);
+      display: none;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 400px;
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 0.15em;
+    }
+
+
+    /* ── SYNC BUTTON ── */
+    .sync-btn {
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: transparent;
+      color: var(--dim);
+      font-family: var(--sans);
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .sync-btn:hover:not(:disabled) {
+      border-color: var(--white);
+      color: var(--white);
+    }
+
+    .sync-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .sync-btn .spin {
+      display: inline-block;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── MODAL GROUPS (collapsible) ── */
+    .modal-groups {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .modal-group {
+      border: 1px solid var(--border2);
+    }
+    .modal-group[open] {
+      border-color: rgba(255,255,255,0.12);
+    }
+    .modal-group-summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+      background: rgba(255,255,255,0.02);
+      transition: background 0.15s;
+    }
+    .modal-group-summary::-webkit-details-marker { display: none; }
+    .modal-group-summary:hover { background: rgba(255,255,255,0.05); }
+    .modal-group[open] .modal-group-summary { border-bottom: 1px solid var(--border2); }
+    .modal-group-summary::before {
+      content: '▶';
+      font-size: 8px;
+      color: var(--dim);
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .modal-group[open] .modal-group-summary::before { transform: rotate(90deg); }
+    .modal-group-name {
+      font-size: 12px;
+      color: var(--white);
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .modal-group-meta {
+      font-size: 9px;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+      flex-shrink: 0;
+    }
+    .modal-group-amt {
+      font-family: var(--serif);
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .modal-group-amt.in { color: var(--green); }
+    .modal-group-amt.out { color: var(--red); }
+    .modal-group-table { margin: 0; }
+    .modal-group-table td, .modal-group-table th { padding: 7px 14px; }
+    .modal-group-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      border-top: 1px solid var(--border);
+      background: #070707;
+      margin-top: 2px;
+    }
+    .modal-group-total .modal-total-label {
+      font-size: 8px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="logo-block">
+        <div class="logo-box">
+          <img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div>
+        </div>
+        <div class="header-title">
+          <h1><em>Cash Flow</em> Projection</h1>
+        </div>
+      </div>
+      <div class="header-right">
+        <div id="syncInfo">Loading...</div>
+        <button class="sync-btn" id="syncBtn" onclick="triggerSync()">⟳ Sync Now</button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard">
+      <div class="loading">Initialising...</div>
+    </div>
+
+  </div>
+
+  <!-- TOOLTIP -->
+  <div id="projTooltip">
+    <div class="pt-card" id="projTooltipCard"></div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-backdrop" id="dayModal" role="dialog" aria-modal="true" aria-labelledby="modalDateLabel">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-date" id="modalDateLabel"><em>Loading...</em></div>
+          <div class="modal-meta" id="modalMeta"></div>
+        </div>
+        <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-stats" id="modalStats"></div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════
+    // CONFIG
+    // ═══════════════════════════════════════════════════════
+    const CONFIG = {
+      CLIENT_ID:      '7fac838d-cace-4a69-822d-64db84c8a494',
+      TENANT_ID:      '07b046b3-6a82-4b7b-a260-d152326e558f',
+      DRIVE_ID:       'b!Yu_GdB9_zUyCHoaXZOr7VPo5LcETvW1ElxX_aIwAk5siEXTO4qIeQK0XXlByz4mz',
+      FILE_ID:        'CA9B2C60-6BBE-45E8-BE5D-3519E370787A',
+      REDIRECT:       'https://artisan-ice.github.io/artisan-dashboard/',
+      FLOW_URL:       'https://default07b046b36a824b7ba260d152326e55.8f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/41b56361ff5b4de0af17d6c15f7acfca/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=88dr1aIPYgvJiidsvRBjvb9HKAdJinU3uf6ZKuSizJ0',
+      // ── Access control ─────────────────────────────────────
+      // All @artisaniceco.com accounts are allowed automatically
+      // To restrict to specific emails instead, add them to ALLOWED_EMAILS
+      ALLOWED_DOMAIN: 'artisaniceco.com',
+      ALLOWED_EMAILS: [] // leave empty to allow all @artisaniceco.com, or add specific emails
+    };
+
+    // ═══════════════════════════════════════════════════════
+    // AUTH
+    // ═══════════════════════════════════════════════════════
+    let _token = null, _msal = null;
+
+    function loadScript(src) {
+      return new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = src; s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+    }
+
+    async function initMsal() {
+      await loadScript('https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.28.1/lib/msal-browser.min.js');
+      _msal = new msal.PublicClientApplication({
+        auth: { clientId: CONFIG.CLIENT_ID, authority: 'https://login.microsoftonline.com/' + CONFIG.TENANT_ID, redirectUri: CONFIG.REDIRECT },
+        cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
+      });
+      await _msal.initialize();
+    }
+
+    async function getTokenSilent() {
+      const accounts = _msal.getAllAccounts();
+      if (!accounts.length) return null;
+      try {
+        const r = await _msal.acquireTokenSilent({ scopes: ['Files.Read'], account: accounts[0] });
+        return r.accessToken;
+      } catch (e) { return null; }
+    }
+
+    function isAllowed(account) {
+      const email = (account.username || account.upn || '').toLowerCase();
+      // If specific emails listed, check against them
+      if (CONFIG.ALLOWED_EMAILS && CONFIG.ALLOWED_EMAILS.length > 0) {
+        return CONFIG.ALLOWED_EMAILS.map(e => e.toLowerCase()).includes(email);
+      }
+      // Otherwise allow anyone from the domain
+      return email.endsWith('@' + CONFIG.ALLOWED_DOMAIN);
+    }
+
+    function showAccessDenied(email) {
+      document.getElementById('dashboard').innerHTML = `
+        <div class="login-screen">
+          <div class="logo-box" style="border-color:rgba(224,92,92,0.4)">
+            <img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div>
+          </div>
+          <div class="login-title" style="color:var(--red)">Access Denied</div>
+          <div class="login-sub" style="color:#888">${email} is not authorised to view this dashboard.<br><br>Contact Artisan Ice Co. to request access.</div>
+          <button class="login-btn" onclick="_msal.logoutPopup().then(()=>location.reload())">Sign out</button>
+        </div>`;
+    }
+
+    function showLogin() {
+      document.getElementById('syncInfo').textContent = '';
+      document.getElementById('dashboard').innerHTML = `
+        <div class="login-screen">
+          <div class="logo-box" style="border-color:rgba(142,202,230,0.5)"><img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div></div>
+          <div class="login-title"><em>Cash Flow</em> Projection</div>
+          <div class="login-sub">Sign in with your Artisan Ice Co. Microsoft account</div>
+          <button class="login-btn" id="signInBtn">Sign in with Microsoft</button>
+          <div class="login-err" id="loginErr"></div>
+        </div>`;
+      document.getElementById('signInBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('signInBtn');
+        btn.textContent = 'Signing in...'; btn.disabled = true;
+        try {
+          const r = await _msal.loginPopup({ scopes: ['Files.Read'] });
+          _token = r.accessToken;
+          if (!isAllowed(r.account)) { showAccessDenied(r.account.username); return; }
+          loadAndRender();
+        } catch (e) {
+          btn.textContent = 'Sign in with Microsoft'; btn.disabled = false;
+          const el = document.getElementById('loginErr');
+          el.style.display = 'block'; el.textContent = e.message || String(e);
+        }
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // GRAPH API
+    // ═══════════════════════════════════════════════════════
+    async function graphGet(path) {
+      const r = await fetch('https://graph.microsoft.com/v1.0' + path, {
+        headers: { Authorization: 'Bearer ' + _token }
+      });
+      if (!r.ok) throw new Error('Graph ' + r.status);
+      return r.json();
+    }
+
+    async function getSheet(name) {
+      const d = await graphGet('/drives/' + CONFIG.DRIVE_ID + '/items/' + CONFIG.FILE_ID +
+        '/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange');
+      return d.values || [];
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // DATA — mirrors getDashboardData() in Apps Script exactly
+    // ═══════════════════════════════════════════════════════
+    function toDateStr(v) {
+      if (!v) return '';
+      if (typeof v === 'number') {
+        return new Date(Math.round((v - 25569) * 86400 * 1000)).toISOString().split('T')[0];
+      }
+      const s = String(v);
+      if (s.match(/^\d{4}-\d{2}-\d{2}/)) return s.substring(0, 10);
+      if (s.includes('T')) return s.split('T')[0];
+      try { return new Date(s).toISOString().split('T')[0]; } catch (e) { return ''; }
+    }
+
+    function fmtDateDisplay(v) {
+      const s = toDateStr(v); if (!s) return '—';
+      return new Date(s + 'T00:00:00').toLocaleDateString('en-AE', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    async function getDashboardData() {
+      const [recRaw, payRaw, bankRaw, projRaw, recurRaw] = await Promise.all([
+        getSheet('Receivables'), getSheet('Payables'),
+        getSheet('BankBalances'), getSheet('Projection'),
+        getSheet('RecurringExpenses')
+      ]);
+
+      // Build recurMap: PaymentDate → [{name, amount, category, monthName}]
+      // Columns: ExpenseName(0) Amount(1) Month(2) Category(3) IsActive(4) PaymentDate(5)
+      const recurMap = {};
+      recurRaw.slice(1).filter(r => r[0] && (r[4] === true || r[4] === 1 || String(r[4]).toUpperCase() === 'TRUE')).forEach(r => {
+        const pd = toDateStr(r[5]);
+        if (!pd) return;
+        if (!recurMap[pd]) recurMap[pd] = [];
+        recurMap[pd].push({ name: String(r[0] || 'Recurring'), amount: Number(r[1]) || 0, category: String(r[3] || ''), monthName: String(r[2] || '') });
+      });
+
+      const recData = recRaw.slice(1).filter(r => r[0]);
+      const payData = payRaw.slice(1).filter(r => r[0]);
+      const bankData = bankRaw.slice(1).filter(r => r[0]);
+      const projData = projRaw.slice(1).filter(r => r[0]);
+
+      const totalReceivables = recData.reduce((s, r) => s + (Number(r[7]) || 0), 0);
+      const totalPayables = payData.reduce((s, r) => s + (Number(r[7]) || 0), 0);
+      const currentBalance = bankData.reduce((s, r) => s + (Number(r[3]) || 0), 0);
+      const overdueRec = recData.filter(r => Number(r[10]) < 0);
+      const overduePay = payData.filter(r => Number(r[10]) < 0);
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      const projection = projData.map(row => {
+        const rowDateStr = toDateStr(row[0]);
+
+        const dayReceivables = recData.filter(r => {
+          const due = toDateStr(r[5]); if (!due) return false;
+          const eff = due < todayStr ? todayStr : due;
+          return eff === rowDateStr;
+        }).map(r => ({
+          invoice: String(r[1] || ''), customer: String(r[2] || ''),
+          amount: Number(r[7]) || 0, overdue: toDateStr(r[5]) < todayStr,
+          originalDue: fmtDateDisplay(r[5])
+        }));
+
+        const dayPayables = payData.filter(p => {
+          const due = toDateStr(p[5]); if (!due) return false;
+          const eff = due < todayStr ? todayStr : due;
+          return eff === rowDateStr;
+        }).map(p => ({
+          bill: String(p[1] || ''), vendor: String(p[2] || ''),
+          amount: Number(p[7]) || 0, overdue: toDateStr(p[5]) < todayStr,
+          originalDue: fmtDateDisplay(p[5])
+        }));
+
+        let dateShort = '', dateFull = '';
+        if (row[0]) {
+          const d = new Date(rowDateStr + 'T00:00:00');
+          dateShort = d.toLocaleDateString('en-AE', { month: 'short', day: '2-digit' });
+          dateFull = fmtDateDisplay(row[0]);
+        }
+
+        const dayRecurItems = recurMap[rowDateStr] || [];
+        return {
+          date: dateShort, fullDate: dateFull,
+          dayOffset: Number(row[1]) || 0,
+          balance: Number(row[7]) || 0,
+          receivables: Number(row[3]) || 0,
+          payables: Number(row[4]) || 0,
+          recurring: Number(row[5]) || 0,
+          status: String(row[8] || 'Healthy'),
+          breakdown: { receivables: dayReceivables, payables: dayPayables, recurItems: dayRecurItems }
+        };
+      });
+
+      const bankAccounts = bankData.map(r => ({ name: String(r[1] || ''), balance: Number(r[3]) || 0 }));
+
+      const topReceivables = [...recData].sort((a, b) => (Number(b[7]) || 0) - (Number(a[7]) || 0)).slice(0, 5).map(r => ({
+        customer: String(r[2] || ''), invoice: String(r[1] || ''),
+        amount: Number(r[7]) || 0, daysUntilDue: Number(r[10]) || 0, dueDate: fmtDateDisplay(r[5])
+      }));
+
+      const topPayables = [...payData].sort((a, b) => (Number(b[7]) || 0) - (Number(a[7]) || 0)).slice(0, 5).map(r => ({
+        vendor: String(r[2] || ''), bill: String(r[1] || ''),
+        amount: Number(r[7]) || 0, daysUntilDue: Number(r[10]) || 0, dueDate: fmtDateDisplay(r[5])
+      }));
+
+      const minBalance = projection.length ? Math.min(...projection.map(p => p.balance)) : 0;
+      const lastSync = recData[0] && recData[0][11]
+        ? new Date(recData[0][11]).toLocaleString('en-AE', { timeZone: 'Asia/Dubai', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : 'N/A';
+
+      return {
+        summary: {
+          currentBalance, totalReceivables, totalPayables,
+          netPosition: currentBalance + totalReceivables - totalPayables,
+          minBalance,
+          overdueReceivablesCount: overdueRec.length,
+          overduePayablesCount: overduePay.length,
+          overdueReceivablesAmount: overdueRec.reduce((s, r) => s + (Number(r[7]) || 0), 0),
+          overduePayablesAmount: overduePay.reduce((s, r) => s + (Number(r[7]) || 0), 0),
+          lastSync
+        },
+        projection, bankAccounts, topReceivables, topPayables
+      };
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // HELPERS
+    // ═══════════════════════════════════════════════════════
+    function fmt(n) {
+      return 'AED ' + Math.abs(n).toLocaleString('en-AE', { maximumFractionDigits: 0 });
+    }
+
+    function getDayBadge(days) {
+      if (days < 0) return '<span class="badge overdue">Overdue ' + Math.abs(days) + 'd</span>';
+      if (days <= 7) return '<span class="badge soon">Due in ' + days + 'd</span>';
+      return '<span class="badge ok">Due in ' + days + 'd</span>';
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // TOOLTIP — identical logic to Apps Script
+    // ═══════════════════════════════════════════════════════
+    function buildTooltipHTML(point) {
+      const rec = point.breakdown.receivables;
+      const pay = point.breakdown.payables;
+      const recurItems = (point.breakdown && point.breakdown.recurItems) || [];
+      const hasRecurring = (point.recurring || 0) > 0;
+      const net = point.receivables - point.payables - (point.recurring || 0);
+      const hasMovements = rec.length > 0 || pay.length > 0 || hasRecurring;
+      const balClass = point.status === 'Critical' ? 'critical' : point.status === 'Warning' ? 'warning' : 'healthy';
+
+      let body = '';
+      if (!hasMovements) {
+        body = '<div class="pt-empty">No cash movements this day</div>';
+      } else {
+        if (rec.length > 0) {
+          body += '<div class="pt-section-label">Cash In · Receivables</div>';
+          // Group by customer
+          const recByCust = {};
+          rec.forEach(r => { if (!recByCust[r.customer]) recByCust[r.customer] = []; recByCust[r.customer].push(r); });
+          Object.entries(recByCust).forEach(([cust, invs]) => {
+            const sub = invs.reduce((s, r) => s + r.amount, 0);
+            const hasOD = invs.some(r => r.overdue);
+            body += `<div class="pt-row"><span class="pt-sign in">+</span><div class="pt-info"><div class="pt-ref">${cust}${hasOD ? '<span class="pt-overdue-tag">OVERDUE</span>' : ''}</div><div class="pt-name">${invs.length} invoice${invs.length > 1 ? 's' : ''}</div></div><span class="pt-amount in">${fmt(sub)}</span></div>`;
+          });
+        }
+        if (pay.length > 0) {
+          body += '<div class="pt-section-label">Cash Out · Payables</div>';
+          // Group by vendor
+          const payByVend = {};
+          pay.forEach(p => { if (!payByVend[p.vendor]) payByVend[p.vendor] = []; payByVend[p.vendor].push(p); });
+          Object.entries(payByVend).forEach(([vend, bills]) => {
+            const sub = bills.reduce((s, p) => s + p.amount, 0);
+            const hasOD = bills.some(p => p.overdue);
+            body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">${vend}${hasOD ? '<span class="pt-overdue-tag">OVERDUE</span>' : ''}</div><div class="pt-name">${bills.length} bill${bills.length > 1 ? 's' : ''}</div></div><span class="pt-amount out">${fmt(sub)}</span></div>`;
+          });
+        }
+        if (hasRecurring) {
+          body += '<div class="pt-section-label">Cash Out · Recurring</div>';
+          if (recurItems.length > 0) {
+            // Group by category
+            const byCat = {};
+            recurItems.filter(r => r.amount > 0).forEach(r => { const k = r.category || 'Recurring'; if (!byCat[k]) byCat[k] = []; byCat[k].push(r); });
+            Object.entries(byCat).forEach(([cat, items]) => {
+              const sub = items.reduce((s, r) => s + r.amount, 0);
+              body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">${cat}</div><div class="pt-name">${items.length} item${items.length > 1 ? 's' : ''}</div></div><span class="pt-amount out">${fmt(sub)}</span></div>`;
+            });
+          } else {
+            body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">Recurring Expenses</div></div><span class="pt-amount out">${fmt(point.recurring)}</span></div>`;
+          }
+        }
+      }
+
+      const netClass = net > 0 ? 'positive' : net < 0 ? 'negative' : 'zero';
+      const netPrefix = net > 0 ? '+' : net < 0 ? '−' : '';
+      const dayLabel = point.dayOffset === 0 ? 'TODAY' : 'DAY ' + point.dayOffset;
+
+      return `<div class="pt-header"><div><div class="pt-date">${point.fullDate}</div><div class="pt-day">${dayLabel}</div></div><div class="pt-balance ${balClass}">${fmt(point.balance)}</div></div><div class="pt-body">${body}</div><div class="pt-footer"><span>Net movement</span><span class="pt-net ${netClass}">${netPrefix}${fmt(Math.abs(net))}</span></div>`;
+    }
+
+    function projectionTooltipHandler(context) {
+      const tooltip = document.getElementById('projTooltip');
+      const card = document.getElementById('projTooltipCard');
+      if (context.tooltip.opacity === 0) { tooltip.classList.remove('visible'); return; }
+      const idx = context.tooltip.dataPoints?.[0]?.dataIndex ?? -1;
+      if (idx < 0 || !window._projData) return;
+      const point = window._projData[idx];
+      if (!point) return;
+      card.innerHTML = buildTooltipHTML(point);
+      // Position after render so we get actual dimensions
+      requestAnimationFrame(() => {
+        const pad = 16;
+        const tw = tooltip.offsetWidth || 300;
+        const th = tooltip.offsetHeight || 220;
+        const winW = window.innerWidth, winH = window.innerHeight;
+        const rect = context.chart.canvas.getBoundingClientRect();
+        let x = rect.left + context.tooltip.caretX + 20;
+        let y = rect.top + context.tooltip.caretY - th / 2;
+        if (x + tw > winW - pad) x = rect.left + context.tooltip.caretX - tw - 20;
+        if (x < pad) x = pad;
+        if (y < pad) y = pad;
+        if (y + th > winH - pad) y = winH - th - pad;
+        tooltip.style.left = x + 'px'; tooltip.style.top = y + 'px';
+        tooltip.classList.add('visible');
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // MODAL — identical logic to Apps Script
+    // ═══════════════════════════════════════════════════════
+    function openModal(point) {
+      const rec = point.breakdown.receivables;
+      const pay = point.breakdown.payables;
+      const totalIn = rec.reduce((s, r) => s + r.amount, 0);
+      const totalOut = pay.reduce((s, p) => s + p.amount, 0) + (point.recurring || 0);
+      const net = point.receivables - point.payables - (point.recurring || 0);
+      const balClass = point.status === 'Critical' ? 'red' : point.status === 'Warning' ? 'amber' : 'green';
+      const dayLabel = point.dayOffset === 0 ? 'Today' : 'Day ' + point.dayOffset;
+
+      document.getElementById('modalDateLabel').innerHTML = '<em>' + point.fullDate + '</em>';
+      document.getElementById('modalMeta').textContent = dayLabel + ' · ' + point.status + ' · Projected balance';
+
+      document.getElementById('modalStats').innerHTML = `
+    <div class="modal-stat"><div class="modal-stat-label">Projected Balance</div><div class="modal-stat-value ${balClass}">${fmt(point.balance)}</div></div>
+    <div class="modal-stat"><div class="modal-stat-label">Total Cash In</div><div class="modal-stat-value green">${totalIn > 0 ? '+' + fmt(totalIn) : '—'}</div></div>
+    <div class="modal-stat"><div class="modal-stat-label">Total Cash Out</div><div class="modal-stat-value red">${totalOut > 0 ? '−' + fmt(totalOut) : '—'}</div></div>`;
+
+      let body = '';
+
+      // ── CASH IN — grouped by customer ──
+      body += `<div><div class="modal-section-title"><span class="ms-dot in"></span>Cash In · Receivables</div>`;
+      if (!rec.length) {
+        body += '<div class="modal-empty">No receivables due this day</div>';
+      } else {
+        const recByCustomer = {};
+        rec.forEach(r => { if (!recByCustomer[r.customer]) recByCustomer[r.customer] = []; recByCustomer[r.customer].push(r); });
+        body += '<div class="modal-groups">';
+        Object.entries(recByCustomer).forEach(([customer, invoices]) => {
+          const sub = invoices.reduce((s, r) => s + r.amount, 0);
+          const hasOverdue = invoices.some(r => r.overdue);
+          body += `<details class="modal-group"><summary class="modal-group-summary"><span class="modal-group-name">${customer}${hasOverdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</span><span class="modal-group-meta">${invoices.length} invoice${invoices.length > 1 ? 's' : ''}</span><span class="modal-group-amt in">+${fmt(sub)}</span></summary>`;
+          body += `<table class="modal-table modal-group-table"><thead><tr><th>Invoice</th><th>Due Date</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+          invoices.forEach(r => {
+            body += `<tr><td><div class="modal-ref">${r.invoice}${r.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div></td><td class="modal-due">${r.originalDue || '—'}</td><td class="modal-amt-in">+${fmt(r.amount)}</td></tr>`;
+          });
+          body += '</tbody></table></details>';
+        });
+        if (rec.length > 1) body += `<div class="modal-group-total"><span class="modal-total-label">Total receivables</span><span class="modal-amt-in">+${fmt(totalIn)}</span></div>`;
+        body += '</div>';
+      }
+      body += '</div>';
+
+      // ── CASH OUT — grouped by vendor + recurring by category ──
+      body += `<div><div class="modal-section-title"><span class="ms-dot out"></span>Cash Out · Payables</div>`;
+      if (!pay.length && !(point.recurring > 0)) {
+        body += '<div class="modal-empty">No payables due this day</div>';
+      } else {
+        body += '<div class="modal-groups">';
+        // Group payables by vendor
+        const payByVendor = {};
+        pay.forEach(p => { if (!payByVendor[p.vendor]) payByVendor[p.vendor] = []; payByVendor[p.vendor].push(p); });
+        Object.entries(payByVendor).forEach(([vendor, bills]) => {
+          const sub = bills.reduce((s, p) => s + p.amount, 0);
+          const hasOverdue = bills.some(p => p.overdue);
+          body += `<details class="modal-group"><summary class="modal-group-summary"><span class="modal-group-name">${vendor}${hasOverdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</span><span class="modal-group-meta">${bills.length} bill${bills.length > 1 ? 's' : ''}</span><span class="modal-group-amt out">−${fmt(sub)}</span></summary>`;
+          body += `<table class="modal-table modal-group-table"><thead><tr><th>Bill</th><th>Due Date</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+          bills.forEach(p => {
+            body += `<tr><td><div class="modal-ref">${p.bill}${p.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div></td><td class="modal-due">${p.originalDue || '—'}</td><td class="modal-amt-out">−${fmt(p.amount)}</td></tr>`;
+          });
+          body += '</tbody></table></details>';
+        });
+        // Recurring — grouped by category with individual names
+        if ((point.recurring || 0) > 0) {
+          const recurItems = (point.breakdown && point.breakdown.recurItems) || [];
+          if (recurItems.length > 0) {
+            // Group by category
+            const recurByCat = {};
+            recurItems.filter(ri => ri.amount > 0).forEach(ri => {
+              const k = ri.category || 'Recurring';
+              if (!recurByCat[k]) recurByCat[k] = [];
+              recurByCat[k].push(ri);
+            });
+            Object.entries(recurByCat).forEach(([cat, items]) => {
+              const sub = items.reduce((s, r) => s + r.amount, 0);
+              const meta = (items[0].monthName || '') + (items[0].monthName ? ' · ' : '') + items.length + ' item' + (items.length > 1 ? 's' : '');
+              body += `<details class="modal-group"><summary class="modal-group-summary"><span class="modal-group-name">${cat}</span><span class="modal-group-meta">${meta}</span><span class="modal-group-amt out">−${fmt(sub)}</span></summary>`;
+              body += `<table class="modal-table modal-group-table"><thead><tr><th>Expense</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+              items.forEach(ri => {
+                body += `<tr><td><div class="modal-ref">${ri.name}</div></td><td class="modal-amt-out">−${fmt(ri.amount)}</td></tr>`;
+              });
+              body += '</tbody></table></details>';
+            });
+          } else {
+            // Fallback: no RecurringExpenses sheet data, show lump sum
+            body += `<details class="modal-group"><summary class="modal-group-summary"><span class="modal-group-name">Recurring Expenses</span><span class="modal-group-meta">Daily</span><span class="modal-group-amt out">−${fmt(point.recurring)}</span></summary>`;
+            body += `<table class="modal-table modal-group-table"><thead><tr><th>Description</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+            body += `<tr><td><div class="modal-ref">Recurring Expenses</div></td><td class="modal-amt-out">−${fmt(point.recurring)}</td></tr>`;
+            body += '</tbody></table></details>';
+          }
+        }
+        if (pay.length > 1 || (point.recurring || 0) > 0) body += `<div class="modal-group-total"><span class="modal-total-label">Total payables + recurring</span><span class="modal-amt-out">−${fmt(totalOut)}</span></div>`;
+        body += '</div>';
+      }
+      body += '</div>';
+
+      if (rec.length > 0 || pay.length > 0 || (point.recurring || 0) > 0) {
+        const netClass = net > 0 ? 'positive' : net < 0 ? 'negative' : 'zero';
+        const netPrefix = net > 0 ? '+' : net < 0 ? '−' : '';
+        const netLabel = net > 0 ? 'Net inflow — more cash coming in than going out' : net < 0 ? 'Net outflow — more cash going out than coming in' : 'Balanced';
+        body += `<div class="modal-net-bar"><div><div class="modal-net-label">Net movement this day</div><div class="modal-net-sub">${netLabel}</div></div><div class="modal-net-value ${netClass}">${netPrefix}${fmt(Math.abs(net))}</div></div>`;
+      }
+
+      document.getElementById('modalBody').innerHTML = body;
+      document.getElementById('dayModal').classList.add('open');
+      document.getElementById('modalClose').focus();
+    }
+
+    function closeModal() { document.getElementById('dayModal').classList.remove('open'); }
+    document.getElementById('dayModal').addEventListener('click', e => { if (e.target === document.getElementById('dayModal')) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+
+    // ═══════════════════════════════════════════════════════
+    // RENDER — identical structure to Apps Script renderDashboard()
+    // ═══════════════════════════════════════════════════════
+    function renderDashboard(data) {
+      if (data.error) {
+        document.getElementById('dashboard').innerHTML = '<div class="loading">⚠ ' + data.error + '</div>';
+        return;
+      }
+
+      const s = data.summary;
+      document.getElementById('syncInfo').innerHTML = 'Last sync<br><span class="sync-time">' + s.lastSync + '</span>';
+
+      const hasOverdue = s.overdueReceivablesCount > 0 || s.overduePayablesCount > 0;
+      const overdueBar = hasOverdue ? `
+    <div class="alert-bar">
+      <div><div class="alert-title">⚠ Overdue Receivables</div><div class="alert-value">${fmt(s.overdueReceivablesAmount)}</div><div style="font-size:9px;color:#666">${s.overdueReceivablesCount} invoice(s) past due</div></div>
+      <div><div class="alert-title">⚠ Overdue Payables</div><div class="alert-value">${fmt(s.overduePayablesAmount)}</div><div style="font-size:9px;color:#666">${s.overduePayablesCount} bill(s) past due</div></div>
+      <div class="alert-note">These amounts are reflected in today's projection</div>
+    </div>` : '';
+
+      const balanceColor = s.currentBalance < 50000 ? 'red' : s.currentBalance < 100000 ? 'amber' : 'white';
+      const netColor = s.netPosition >= 0 ? 'green' : 'red';
+
+      document.getElementById('dashboard').innerHTML = `
+    ${overdueBar}
+    <div class="kpi-grid">
+      <div class="kpi ${balanceColor}"><div class="kpi-label">Bank Balance</div><div class="kpi-value ${balanceColor === 'white' ? '' : balanceColor}">${fmt(s.currentBalance)}</div><div class="kpi-sub">Across ${data.bankAccounts.length} accounts</div></div>
+      <div class="kpi green"><div class="kpi-label">Total Receivables</div><div class="kpi-value green">${fmt(s.totalReceivables)}</div><div class="kpi-sub">Unpaid invoices due</div></div>
+      <div class="kpi red"><div class="kpi-label">Total Payables</div><div class="kpi-value red">${fmt(s.totalPayables)}</div><div class="kpi-sub">Unpaid bills due</div></div>
+      <div class="kpi ${netColor === 'green' ? 'blue' : 'red'}"><div class="kpi-label">Net Position</div><div class="kpi-value ${netColor}">${s.netPosition >= 0 ? '+' : ''}${fmt(s.netPosition)}</div><div class="kpi-sub">Balance + Receivables − Payables</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">60-Day Projected Balance</div>
+      <div class="chart-hint">↖ Click any point to see day detail</div>
+      <canvas id="projectionChart"></canvas>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Daily Cash In vs Out</div>
+      <canvas id="flowChart"></canvas>
+    </div>
+
+    <div class="two-col">
+      <div class="panel">
+        <div class="panel-title">Bank Accounts</div>
+        <div class="bank-list">${data.bankAccounts.map(a => `<div class="bank-item"><div class="bank-name">${a.name}</div><div class="bank-balance">${fmt(a.balance)}</div></div>`).join('')}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Upcoming Receivables</div>
+        ${data.topReceivables.length === 0
+          ? '<div style="color:var(--dim);font-size:11px;padding:20px 0">No unpaid invoices</div>'
+          : `<table class="data-table"><thead><tr><th>Customer</th><th>Amount</th><th>Status</th></tr></thead><tbody>${data.topReceivables.map(r => `<tr><td><div>${r.customer}</div><div style="color:var(--dim);font-size:9px">${r.invoice} · ${r.dueDate}</div></td><td class="amount-green">${fmt(r.amount)}</td><td>${getDayBadge(r.daysUntilDue)}</td></tr>`).join('')}</tbody></table>`}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Upcoming Payables</div>
+      ${data.topPayables.length === 0
+          ? '<div style="color:var(--dim);font-size:11px;padding:20px 0">No unpaid bills</div>'
+          : `<table class="data-table"><thead><tr><th>Vendor</th><th>Bill</th><th>Amount</th><th>Due Date</th><th>Status</th></tr></thead><tbody>${data.topPayables.map(p => `<tr><td>${p.vendor}</td><td style="color:var(--dim)">${p.bill}</td><td class="amount-red">${fmt(p.amount)}</td><td style="color:var(--dim)">${p.dueDate}</td><td>${getDayBadge(p.daysUntilDue)}</td></tr>`).join('')}</tbody></table>`}
+    </div>`;
+
+      window._projData = data.projection;
+
+      const labels = data.projection.map(p => p.date);
+      const balances = data.projection.map(p => p.balance);
+      const recVals = data.projection.map(p => p.receivables);
+      const payVals = data.projection.map(p => p.payables);
+      const critical = 10000, warning = 20000;
+
+      const projMax = Math.max(...balances);
+      const projMin = Math.min(...balances);
+      const padding = Math.abs(projMax - projMin) * 0.2 || 10000;
+      const yMax = Math.ceil((projMax + padding) / 10000) * 10000;
+      const yMin = Math.floor((projMin - padding) / 10000) * 10000;
+      const flowAbsMax = Math.max(...recVals, ...payVals, 1);
+      const flowYMax = Math.ceil(flowAbsMax * 1.4 / 1000) * 1000;
+
+      function wrapCanvas(id, h) {
+        const c = document.getElementById(id);
+        const w = document.createElement('div');
+        w.style.cssText = 'position:relative;width:100%;height:' + h + 'px';
+        c.parentNode.insertBefore(w, c); w.appendChild(c);
+      }
+      wrapCanvas('projectionChart', 340);
+      wrapCanvas('flowChart', 260);
+
+      const chartDefaults = {
+        x: { ticks: { color: '#555', font: { family: 'Nunito Sans', size: 9 }, maxTicksLimit: 10 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+      };
+
+      new Chart(document.getElementById('projectionChart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Projected Balance', data: balances, borderColor: '#ffffff', backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 5, pointHoverBackgroundColor: '#ffffff', pointHoverBorderColor: '#000', pointHoverBorderWidth: 2, tension: 0.3, fill: true },
+            { label: 'Critical (AED ' + (critical / 1000) + 'k)', data: Array(labels.length).fill(critical), borderColor: 'rgba(224,92,92,0.4)', borderWidth: 1, borderDash: [4, 4], pointRadius: 0, fill: false },
+            { label: 'Warning (AED ' + (warning / 1000) + 'k)', data: Array(labels.length).fill(warning), borderColor: 'rgba(232,168,56,0.4)', borderWidth: 1, borderDash: [4, 4], pointRadius: 0, fill: false }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { labels: { color: '#555', font: { family: 'Nunito Sans', size: 10 }, boxWidth: 12 } },
+            tooltip: { enabled: false, external: projectionTooltipHandler }
+          },
+          scales: {
+            x: chartDefaults.x,
+            y: { min: yMin, max: yMax, ticks: { color: '#555', font: { family: 'Nunito Sans', size: 9 }, callback: v => 'AED ' + (v / 1000).toFixed(0) + 'k' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          },
+          onClick: (evt, elements, chart) => {
+            const pts = chart.getElementsAtEventForMode(evt.native, 'index', { intersect: false }, false);
+            if (!pts.length || !window._projData) return;
+            const point = window._projData[pts[0].index];
+            if (point) openModal(point);
+          },
+          onHover: (evt) => {
+            if (evt.native?.type === 'mouseleave') document.getElementById('projTooltip').classList.remove('visible');
+          }
+        }
+      });
+
+      document.getElementById('projectionChart').addEventListener('mouseleave', () => {
+        document.getElementById('projTooltip').classList.remove('visible');
+      });
+
+      new Chart(document.getElementById('flowChart'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Cash In (Receivables)', data: recVals, backgroundColor: 'rgba(126,200,160,0.65)', borderRadius: 1 },
+            { label: 'Cash Out (Payables)', data: payVals.map(v => -v), backgroundColor: 'rgba(224,92,92,0.65)', borderRadius: 1 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#555', font: { family: 'Nunito Sans', size: 10 }, boxWidth: 12 } },
+            tooltip: {
+              backgroundColor: '#0d0d0d', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, titleColor: '#fff', bodyColor: '#e8e8e8',
+              callbacks: { label: ctx => ' ' + ctx.dataset.label + ': AED ' + Math.abs(ctx.parsed.y).toLocaleString('en-AE', { maximumFractionDigits: 0 }) }
+            }
+          },
+          scales: {
+            x: chartDefaults.x,
+            y: { min: -flowYMax, max: flowYMax, ticks: { color: '#555', font: { family: 'Nunito Sans', size: 9 }, callback: v => 'AED ' + (v / 1000).toFixed(0) + 'k' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          }
+        }
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════════
+    async function loadAndRender() {
+      document.getElementById('dashboard').innerHTML = '<div class="loading">Fetching live data...</div>';
+      try {
+        renderDashboard(await getDashboardData());
+      } catch (err) {
+        document.getElementById('dashboard').innerHTML = '<div class="loading">⚠ ' + err.message + '</div>';
+        console.error(err);
+      }
+    }
+
+
+    // ═══════════════════════════════════════════════════════
+    // MANUAL SYNC TRIGGER
+    // ═══════════════════════════════════════════════════════
+    async function triggerSync() {
+      if (!CONFIG.FLOW_URL || CONFIG.FLOW_URL === 'YOUR_POWER_AUTOMATE_HTTP_TRIGGER_URL') {
+        alert('Flow trigger URL not configured. See setup instructions.');
+        return;
+      }
+      const btn = document.getElementById('syncBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spin">⟳</span> Syncing...';
+      try {
+        await fetch(CONFIG.FLOW_URL, { method: 'POST', mode: 'no-cors' });
+        btn.innerHTML = '✓ Sync triggered';
+        setTimeout(() => {
+          btn.innerHTML = '⟳ Sync Now';
+          btn.disabled = false;
+          // Reload data after 30s to show updated values
+          setTimeout(() => loadAndRender(), 30000);
+        }, 3000);
+      } catch (e) {
+        btn.innerHTML = '⚠ Failed';
+        setTimeout(() => { btn.innerHTML = '⟳ Sync Now'; btn.disabled = false; }, 3000);
+      }
+    }
+
+    async function init() {
+      try {
+        await initMsal();
+        _token = await getTokenSilent();
+        if (_token) {
+          const accounts = _msal.getAllAccounts();
+          if (accounts.length && !isAllowed(accounts[0])) {
+            showAccessDenied(accounts[0].username);
+            return;
+          }
+          loadAndRender();
+        } else {
+          showLogin();
+        }
+      } catch (err) {
+        document.getElementById('dashboard').innerHTML = '<div class="loading">⚠ Auth error: ' + err.message + '</div>';
+      }
+    }
+
+    init();
+  </script>
+</body>
+
+</html>
