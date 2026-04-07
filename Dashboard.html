@@ -22,7 +22,7 @@
       --border2: rgba(255, 255, 255, 0.06);
       --white: #ffffff;
       --text: #e8e8e8;
-      --dim: #999999;
+      --dim: #666666;
       --red: #e05c5c;
       --green: #7ec8a0;
       --amber: #e8a838;
@@ -73,16 +73,13 @@
 
     .logo-box {
       border: 1px solid rgba(142, 202, 230, 0.5);
-      padding: 8px 10px;
+      padding: 10px 13px;
       flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
     .logo-text {
       font-family: var(--serif);
-      font-size: 11px;
+      font-size: 10px;
       letter-spacing: 0.3em;
       text-transform: uppercase;
       color: var(--white);
@@ -91,7 +88,7 @@
 
     .header-title h1 {
       font-family: var(--serif);
-      font-size: 2.0625rem;
+      font-size: 2rem;
       font-weight: 400;
       color: var(--white);
       letter-spacing: -0.01em;
@@ -103,7 +100,7 @@
     }
 
     .header-sub {
-      font-size: 10px;
+      font-size: 9px;
       color: var(--dim);
       margin-top: 7px;
       letter-spacing: 0.2em;
@@ -136,15 +133,15 @@
 
     .header-right {
       text-align: right;
-      font-size: 10px;
-      color: #aaa;
+      font-size: 9px;
+      color: var(--dim);
       letter-spacing: 0.1em;
     }
 
     .header-right .sync-time {
       color: var(--white);
       font-family: var(--serif);
-      font-size: 14px;
+      font-size: 13px;
       display: block;
       margin-top: 4px;
     }
@@ -161,7 +158,7 @@
     }
 
     .alert-title {
-      font-size: 9px;
+      font-size: 8px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
       color: var(--red);
@@ -170,14 +167,14 @@
 
     .alert-value {
       font-family: var(--serif);
-      font-size: 1.2625rem;
+      font-size: 1.2rem;
       color: var(--red);
     }
 
     .alert-note {
       margin-left: auto;
-      font-size: 10px;
-      color: rgba(224, 92, 92, 0.9);
+      font-size: 9px;
+      color: rgba(224, 92, 92, 0.6);
     }
 
     /* ── KPI GRID ── */
@@ -231,16 +228,16 @@
     }
 
     .kpi-label {
-      font-size: 9px;
+      font-size: 8px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: #bbb;
+      color: var(--dim);
       margin-bottom: 12px;
     }
 
     .kpi-value {
       font-family: var(--serif);
-      font-size: 1.7625rem;
+      font-size: 1.7rem;
       font-weight: 400;
       line-height: 1;
       color: var(--white);
@@ -259,8 +256,8 @@
     }
 
     .kpi-sub {
-      font-size: 10px;
-      color: #aaa;
+      font-size: 9px;
+      color: var(--dim);
       margin-top: 8px;
     }
 
@@ -273,10 +270,10 @@
     }
 
     .panel-title {
-      font-size: 9px;
+      font-size: 8px;
       letter-spacing: 0.25em;
       text-transform: uppercase;
-      color: #bbb;
+      color: var(--dim);
       margin-bottom: 20px;
       display: flex;
       align-items: center;
@@ -291,7 +288,7 @@
     }
 
     .chart-hint {
-      font-size: 9px;
+      font-size: 8px;
       color: var(--dim);
       text-align: right;
       margin-top: -14px;
@@ -327,13 +324,13 @@
     }
 
     .bank-name {
-      font-size: 12px;
-      color: #aaa;
+      font-size: 11px;
+      color: var(--dim);
     }
 
     .bank-balance {
       font-family: var(--serif);
-      font-size: 1.1625rem;
+      font-size: 1.1rem;
       color: var(--white);
     }
 
@@ -341,16 +338,16 @@
     .data-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 12px;
+      font-size: 11px;
     }
 
     .data-table th {
       text-align: left;
       padding: 8px 12px;
-      font-size: 9px;
+      font-size: 8px;
       letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: #bbb;
+      color: var(--dim);
       font-weight: 400;
       border-bottom: 1px solid var(--border2);
     }
@@ -373,7 +370,7 @@
     .badge {
       display: inline-block;
       padding: 2px 8px;
-      font-size: 9px;
+      font-size: 8px;
       letter-spacing: 0.08em;
       border: 1px solid;
     }
@@ -439,12 +436,12 @@
 
     .pt-date {
       font-family: var(--serif);
-      font-size: 0.9625rem;
+      font-size: 0.9rem;
       color: var(--white);
     }
 
     .pt-day {
-      font-size: 10px;
+      font-size: 9px;
       color: var(--dim);
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -452,7 +449,7 @@
 
     .pt-balance {
       font-family: var(--serif);
-      font-size: 1.0625rem;
+      font-size: 1rem;
     }
 
     .pt-balance.healthy {
@@ -475,17 +472,17 @@
     }
 
     .pt-empty {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--dim);
       text-align: center;
       padding: 8px 0;
     }
 
     .pt-section-label {
-      font-size: 9px;
+      font-size: 8px;
       letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: #bbb;
+      color: var(--dim);
       margin-top: 6px;
       margin-bottom: 2px;
       padding-bottom: 3px;
@@ -497,13 +494,13 @@
       align-items: flex-start;
       gap: 8px;
       padding: 4px 0;
-      font-size: 11px;
+      font-size: 10px;
       line-height: 1.4;
     }
 
     .pt-sign {
       font-family: var(--serif);
-      font-size: 12px;
+      font-size: 11px;
       width: 14px;
       flex-shrink: 0;
       margin-top: 1px;
@@ -524,15 +521,15 @@
 
     .pt-ref {
       color: var(--white);
-      font-size: 11px;
+      font-size: 10px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .pt-name {
-      color: #aaa;
-      font-size: 10px;
+      color: var(--dim);
+      font-size: 9px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -540,7 +537,7 @@
 
     .pt-amount {
       font-family: var(--serif);
-      font-size: 12px;
+      font-size: 11px;
       white-space: nowrap;
       flex-shrink: 0;
       margin-top: 1px;
@@ -559,7 +556,7 @@
       background: rgba(224, 92, 92, 0.12);
       color: var(--red);
       border: 1px solid rgba(224, 92, 92, 0.3);
-      font-size: 9px;
+      font-size: 8px;
       padding: 1px 4px;
       vertical-align: middle;
       margin-left: 4px;
@@ -571,13 +568,13 @@
       padding: 7px 14px;
       display: flex;
       justify-content: space-between;
-      font-size: 10px;
+      font-size: 9px;
       color: var(--dim);
     }
 
     .pt-net {
       font-family: var(--serif);
-      font-size: 12px;
+      font-size: 11px;
     }
 
     .pt-net.positive {
@@ -643,7 +640,7 @@
 
     .modal-date {
       font-family: var(--serif);
-      font-size: 1.4625rem;
+      font-size: 1.4rem;
       font-weight: 400;
       color: var(--white);
       line-height: 1;
@@ -654,8 +651,8 @@
     }
 
     .modal-meta {
-      font-size: 10px;
-      color: #aaa;
+      font-size: 9px;
+      color: var(--dim);
       letter-spacing: 0.12em;
       text-transform: uppercase;
       margin-top: 5px;
@@ -671,7 +668,7 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 15px;
+      font-size: 14px;
       transition: border-color 0.15s, color 0.15s;
       flex-shrink: 0;
       margin-top: 2px;
@@ -702,15 +699,15 @@
     }
 
     .modal-stat-label {
-      font-size: 9px;
-      color: #bbb;
+      font-size: 8px;
+      color: var(--dim);
       letter-spacing: 0.12em;
       text-transform: uppercase;
     }
 
     .modal-stat-value {
       font-family: var(--serif);
-      font-size: 1.1125rem;
+      font-size: 1.05rem;
       color: var(--white);
     }
 
@@ -744,10 +741,10 @@
     }
 
     .modal-section-title {
-      font-size: 9px;
+      font-size: 8px;
       letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: #bbb;
+      color: var(--dim);
       margin-bottom: 8px;
       display: flex;
       align-items: center;
@@ -779,16 +776,16 @@
     .modal-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 12px;
+      font-size: 11px;
     }
 
     .modal-table th {
       text-align: left;
       padding: 6px 10px;
-      font-size: 9px;
+      font-size: 8px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: #bbb;
+      color: var(--dim);
       font-weight: 400;
       border-bottom: 1px solid var(--border2);
     }
@@ -809,24 +806,24 @@
 
     .modal-ref {
       color: var(--white);
-      font-size: 12px;
+      font-size: 11px;
     }
 
     .modal-party {
       color: var(--dim);
-      font-size: 11px;
+      font-size: 10px;
       margin-top: 1px;
     }
 
     .modal-due {
       color: var(--dim);
-      font-size: 11px;
+      font-size: 10px;
     }
 
     .modal-amt-in {
       color: var(--green);
       font-family: var(--serif);
-      font-size: 14px;
+      font-size: 13px;
       text-align: right;
       white-space: nowrap;
     }
@@ -834,7 +831,7 @@
     .modal-amt-out {
       color: var(--red);
       font-family: var(--serif);
-      font-size: 14px;
+      font-size: 13px;
       text-align: right;
       white-space: nowrap;
     }
@@ -844,7 +841,7 @@
       background: rgba(224, 92, 92, 0.1);
       color: var(--red);
       border: 1px solid rgba(224, 92, 92, 0.3);
-      font-size: 9px;
+      font-size: 8px;
       padding: 1px 4px;
       vertical-align: middle;
       margin-left: 5px;
@@ -858,14 +855,14 @@
     }
 
     .modal-total-label {
-      font-size: 9px;
+      font-size: 8px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--dim);
     }
 
     .modal-empty {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--dim);
       text-align: center;
       padding: 14px 0;
@@ -882,19 +879,19 @@
     }
 
     .modal-net-label {
-      font-size: 10px;
-      color: #bbb;
+      font-size: 9px;
+      color: var(--dim);
     }
 
     .modal-net-sub {
-      font-size: 9px;
-      color: rgba(255, 255, 255, 0.5);
+      font-size: 8px;
+      color: rgba(255, 255, 255, 0.2);
       margin-top: 2px;
     }
 
     .modal-net-value {
       font-family: var(--serif);
-      font-size: 1.1625rem;
+      font-size: 1.1rem;
     }
 
     .modal-net-value.positive {
@@ -921,7 +918,7 @@
 
     .login-title {
       font-family: var(--serif);
-      font-size: 2.0625rem;
+      font-size: 2rem;
       font-weight: 400;
       color: var(--white);
     }
@@ -931,7 +928,7 @@
     }
 
     .login-sub {
-      font-size: 10px;
+      font-size: 9px;
       color: var(--dim);
       letter-spacing: 0.15em;
       text-align: center;
@@ -944,7 +941,7 @@
       background: transparent;
       color: var(--white);
       font-family: var(--sans);
-      font-size: 10px;
+      font-size: 9px;
       letter-spacing: 0.25em;
       text-transform: uppercase;
       padding: 13px 30px;
@@ -958,7 +955,7 @@
     }
 
     .login-err {
-      font-size: 10px;
+      font-size: 9px;
       color: var(--red);
       display: none;
     }
@@ -968,7 +965,7 @@
       align-items: center;
       justify-content: center;
       height: 400px;
-      font-size: 12px;
+      font-size: 11px;
       color: var(--dim);
       letter-spacing: 0.15em;
     }
@@ -980,7 +977,7 @@
       background: transparent;
       color: var(--dim);
       font-family: var(--sans);
-      font-size: 9px;
+      font-size: 8px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
       padding: 7px 14px;
@@ -1028,107 +1025,6 @@
         grid-template-columns: 1fr;
       }
     }
-
-    /* ── MODAL GROUPS (collapsible) ── */
-    .modal-groups {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .modal-group {
-      border: 1px solid var(--border2);
-    }
-
-    .modal-group[open] {
-      border-color: rgba(255,255,255,0.12);
-    }
-
-    .modal-group-summary {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      cursor: pointer;
-      list-style: none;
-      user-select: none;
-      background: rgba(255,255,255,0.02);
-      transition: background 0.15s;
-    }
-
-    .modal-group-summary::-webkit-details-marker { display: none; }
-
-    .modal-group-summary:hover {
-      background: rgba(255,255,255,0.05);
-    }
-
-    .modal-group[open] .modal-group-summary {
-      border-bottom: 1px solid var(--border2);
-    }
-
-    .modal-group-summary::before {
-      content: '▶';
-      font-size: 9px;
-      color: var(--dim);
-      flex-shrink: 0;
-      transition: transform 0.2s;
-    }
-
-    .modal-group[open] .modal-group-summary::before {
-      transform: rotate(90deg);
-    }
-
-    .modal-group-name {
-      font-size: 13px;
-      color: var(--white);
-      flex: 1;
-      min-width: 0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .modal-group-meta {
-      font-size: 10px;
-      color: #aaa;
-      letter-spacing: 0.08em;
-      flex-shrink: 0;
-    }
-
-    .modal-group-amt {
-      font-family: var(--serif);
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-
-    .modal-group-amt.in { color: var(--green); }
-    .modal-group-amt.out { color: var(--red); }
-
-    .modal-group-table {
-      margin: 0;
-    }
-
-    .modal-group-table td, .modal-group-table th {
-      padding: 7px 14px;
-    }
-
-    .modal-group-total {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 14px;
-      border-top: 1px solid var(--border);
-      background: #070707;
-      margin-top: 2px;
-    }
-
-    .modal-group-total .modal-total-label {
-      font-size: 9px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--dim);
-    }
-
   </style>
 </head>
 
@@ -1139,12 +1035,11 @@
     <div class="header">
       <div class="logo-block">
         <div class="logo-box">
-          <img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-          <div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div>
+          <div class="logo-text">ARTISAN<br>ICE CO.</div>
         </div>
         <div class="header-title">
-          <h1><em>Cash Flow</em> Projection</h1>
-
+          <h1><em>Cash Flow</em> Intelligence</h1>
+          <div class="header-sub"><span class="dot"></span>Live · Hyprflow Business Solutions</div>
         </div>
       </div>
       <div class="header-right">
@@ -1185,20 +1080,16 @@
     // CONFIG
     // ═══════════════════════════════════════════════════════
     const CONFIG = {
-      CLIENT_ID:  '7fac838d-cace-4a69-822d-64db84c8a494',
-      TENANT_ID:  '07b046b3-6a82-4b7b-a260-d152326e558f',
-      DRIVE_ID:   'b!Yu_GdB9_zUyCHoaXZOr7VPo5LcETvW1ElxX_aIwAk5siEXTO4qIeQK0XXlByz4mz',
-      FILE_ID:    'CA9B2C60-6BBE-45E8-BE5D-3519E370787A',
-      // File location: personal OneDrive of accounts@artisaniceco.com → Cashflow/ZealantUAE_CashFlow.xlsx
-      REDIRECT:   'https://artisan-ice.github.io/artisan-dashboard/',
-      FLOW_URL:   'https://default07b046b36a824b7ba260d152326e55.8f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/41b56361ff5b4de0af17d6c15f7acfca/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=88dr1aIPYgvJiidsvRBjvb9HKAdJinU3uf6ZKuSizJ0',
-      ALLOWED_USERS: [
-        'accounts@artisaniceco.com'
-      ]
+      CLIENT_ID: '7fac838d-cace-4a69-822d-64db84c8a494',
+      TENANT_ID: '07b046b3-6a82-4b7b-a260-d152326e558f',
+      DRIVE_ID: 'b!Yu_GdB9_zUyCHoaXZOr7VPo5LcETvW1ElxX_aIwAk5siEXTO4qIeQK0XXlByz4mz',
+      FILE_ID: 'CA9B2C60-6BBE-45E8-BE5D-3519E370787A',
+      REDIRECT: 'https://artisan-ice.github.io/artisan-dashboard/',
+      FLOW_URL: 'https://default07b046b36a824b7ba260d152326e55.8f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/41b56361ff5b4de0af17d6c15f7acfca/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=88dr1aIPYgvJiidsvRBjvb9HKAdJinU3uf6ZKuSizJ0'
     };
 
     // ═══════════════════════════════════════════════════════
-    // AUTH — MSAL delegated login
+    // AUTH
     // ═══════════════════════════════════════════════════════
     let _token = null, _msal = null;
 
@@ -1228,41 +1119,22 @@
       } catch (e) { return null; }
     }
 
-    function isAllowedUser(account) {
-      if (!CONFIG.ALLOWED_USERS || CONFIG.ALLOWED_USERS.length === 0) return true;
-      const email = (account.username || account.upn || '').toLowerCase();
-      return CONFIG.ALLOWED_USERS.map(e => e.toLowerCase()).includes(email);
-    }
-
-    function showAccessDenied(email) {
-      document.getElementById('dashboard').innerHTML = `
-        <div class="login-screen">
-          <div class="logo-box" style="border-color:rgba(224,92,92,0.4)">
-            <img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div>
-          </div>
-          <div class="login-title" style="color:var(--red)">Access Denied</div>
-          <div class="login-sub" style="color:#888">${email} is not authorised to view this dashboard.<br><br>Contact Artisan Ice Co. to request access.</div>
-          <button class="login-btn" onclick="_msal.logoutPopup().then(()=>location.reload())">Sign out</button>
-        </div>`;
-    }
-
     function showLogin() {
       document.getElementById('syncInfo').textContent = '';
       document.getElementById('dashboard').innerHTML = `
-        <div class="login-screen">
-          <div class="logo-box" style="border-color:rgba(142,202,230,0.5)"><img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div></div>
-          <div class="login-title"><em>Cash Flow</em> Projection</div>
-          <div class="login-sub">Sign in with your Microsoft 365 account to access the live dashboard</div>
-          <button class="login-btn" id="signInBtn">Sign in with Microsoft</button>
-          <div class="login-err" id="loginErr"></div>
-        </div>`;
+    <div class="login-screen">
+      <div class="logo-box" style="border-color:rgba(142,202,230,0.5)"><div class="logo-text">ARTISAN<br>ICE CO.</div></div>
+      <div class="login-title"><em>Cash Flow</em> Intelligence</div>
+      <div class="login-sub">Sign in with your Microsoft 365 account to access the live dashboard</div>
+      <button class="login-btn" id="signInBtn">Sign in with Microsoft</button>
+      <div class="login-err" id="loginErr"></div>
+    </div>`;
       document.getElementById('signInBtn').addEventListener('click', async () => {
         const btn = document.getElementById('signInBtn');
         btn.textContent = 'Signing in...'; btn.disabled = true;
         try {
           const r = await _msal.loginPopup({ scopes: ['Files.Read'] });
           _token = r.accessToken;
-          if (!isAllowedUser(r.account)) { showAccessDenied(r.account.username); return; }
           loadAndRender();
         } catch (e) {
           btn.textContent = 'Sign in with Microsoft'; btn.disabled = false;
@@ -1284,15 +1156,10 @@
     }
 
     async function getSheet(name) {
-      const d = await graphGet(
-        '/drives/' + CONFIG.DRIVE_ID +
-        '/items/' + CONFIG.FILE_ID +
-        '/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange'
-      );
+      const d = await graphGet('/drives/' + CONFIG.DRIVE_ID + '/items/' + CONFIG.FILE_ID +
+        '/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange');
       return d.values || [];
     }
-
-
 
     // ═══════════════════════════════════════════════════════
     // DATA — mirrors getDashboardData() in Apps Script exactly
@@ -1302,23 +1169,10 @@
       if (typeof v === 'number') {
         return new Date(Math.round((v - 25569) * 86400 * 1000)).toISOString().split('T')[0];
       }
-      const s = String(v).trim();
+      const s = String(v);
       if (s.match(/^\d{4}-\d{2}-\d{2}/)) return s.substring(0, 10);
       if (s.includes('T')) return s.split('T')[0];
-      // Handle Excel date formats: "5-Apr-26", "5-Apr-2026", "05-Apr-2026"
-      const dmy = s.match(/^(\d{1,2})[-\/]([A-Za-z]{3})[-\/](\d{2,4})$/);
-      if (dmy) {
-        const months = { jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12 };
-        const mon = months[dmy[2].toLowerCase()];
-        if (mon) {
-          let yr = parseInt(dmy[3]);
-          if (yr < 100) yr += yr < 50 ? 2000 : 1900;
-          const d = parseInt(dmy[1]);
-          return yr + '-' + String(mon).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-        }
-      }
-      try { const d = new Date(s); if (!isNaN(d.getTime())) return d.toISOString().split('T')[0]; } catch (e) {}
-      return '';
+      try { return new Date(s).toISOString().split('T')[0]; } catch (e) { return ''; }
     }
 
     function fmtDateDisplay(v) {
@@ -1327,51 +1181,27 @@
     }
 
     async function getDashboardData() {
-      const [recRaw, payRaw, bankRaw, projRaw, cfgRaw, recurRaw] = await Promise.all([
+      const [recRaw, payRaw, bankRaw, projRaw] = await Promise.all([
         getSheet('Receivables'), getSheet('Payables'),
-        getSheet('BankBalances'), getSheet('Projection'),
-        getSheet('Config'), getSheet('RecurringExpenses')
+        getSheet('BankBalances'), getSheet('Projection')
       ]);
 
-      const recRows = recRaw.slice(1).filter(r => r[0]);
-      const payRows = payRaw.slice(1).filter(r => r[0]);
-      const bankRows = bankRaw.slice(1).filter(r => r[0]);
+      const recData = recRaw.slice(1).filter(r => r[0]);
+      const payData = payRaw.slice(1).filter(r => r[0]);
+      const bankData = bankRaw.slice(1).filter(r => r[0]);
       const projData = projRaw.slice(1).filter(r => r[0]);
 
-      // Parse Config sheet — rows are [Setting, Value, ...]
-      let projectionDays = 60, criticalThreshold = 10000, warningThreshold = 20000;
-      cfgRaw.slice(1).filter(r => r[0]).forEach(r => {
-        const k = String(r[0]), v = Number(r[1]);
-        if (k === 'ProjectionDays' && v > 0) projectionDays = v;
-        if (k === 'CriticalThreshold' && v > 0) criticalThreshold = v;
-        if (k === 'WarningThreshold' && v > 0) warningThreshold = v;
-      });
-
-      // Build recurring expense lookup
-      // Columns: ExpenseName(0) Amount(1) Month(2) Category(3) IsActive(4) PaymentDate(5)
-      const recurMap = {};
-      recurRaw.slice(1).filter(r => r[0] && (r[4] === true || r[4] === 1 || String(r[4]).toUpperCase() === 'TRUE')).forEach(r => {
-        const exactDate = toDateStr(r[5]);  // PaymentDate col
-        const entry = { name: String(r[0] || 'Recurring'), amount: Number(r[1]) || 0, category: String(r[3] || ''), monthName: String(r[2] || '') };
-        if (exactDate) {
-          if (!recurMap[exactDate]) recurMap[exactDate] = [];
-          recurMap[exactDate].push(entry);
-        }
-      });
-
-      const ACTIVE_REC_STATUSES = ['sent', 'unpaid', 'overdue', 'partially_paid'];
-      const ACTIVE_PAY_STATUSES = ['open', 'unpaid', 'overdue', 'partially_paid'];
-      const totalReceivables = recRows.filter(r => ACTIVE_REC_STATUSES.includes(String(r[8] || '').toLowerCase())).reduce((s, r) => s + (Number(r[7]) || 0), 0);
-      const totalPayables = payRows.filter(r => ACTIVE_PAY_STATUSES.includes(String(r[8] || '').toLowerCase())).reduce((s, r) => s + (Number(r[7]) || 0), 0);
-      const currentBalance = bankRows.reduce((s, r) => s + (Number(r[3]) || 0), 0);
-      const overdueRec = recRows.filter(r => Number(r[10]) < 0);
-      const overduePay = payRows.filter(r => Number(r[10]) < 0);
+      const totalReceivables = recData.reduce((s, r) => s + (Number(r[7]) || 0), 0);
+      const totalPayables = payData.reduce((s, r) => s + (Number(r[7]) || 0), 0);
+      const currentBalance = bankData.reduce((s, r) => s + (Number(r[3]) || 0), 0);
+      const overdueRec = recData.filter(r => Number(r[10]) < 0);
+      const overduePay = payData.filter(r => Number(r[10]) < 0);
       const todayStr = new Date().toISOString().split('T')[0];
 
       const projection = projData.map(row => {
         const rowDateStr = toDateStr(row[0]);
 
-        const dayReceivables = recRows.filter(r => {
+        const dayReceivables = recData.filter(r => {
           const due = toDateStr(r[5]); if (!due) return false;
           const eff = due < todayStr ? todayStr : due;
           return eff === rowDateStr;
@@ -1381,7 +1211,7 @@
           originalDue: fmtDateDisplay(r[5])
         }));
 
-        const dayPayables = payRows.filter(p => {
+        const dayPayables = payData.filter(p => {
           const due = toDateStr(p[5]); if (!due) return false;
           const eff = due < todayStr ? todayStr : due;
           return eff === rowDateStr;
@@ -1398,38 +1228,32 @@
           dateFull = fmtDateDisplay(row[0]);
         }
 
-        // Get recurring items by exact payment date
-        const dayRecurItems = (recurMap && recurMap[rowDateStr]) ? recurMap[rowDateStr] : [];
-
         return {
           date: dateShort, fullDate: dateFull,
           dayOffset: Number(row[1]) || 0,
           balance: Number(row[7]) || 0,
           receivables: Number(row[3]) || 0,
           payables: Number(row[4]) || 0,
-          recurring: Number(row[5]) || 0,
-          net: Number(row[6]) || 0,
           status: String(row[8] || 'Healthy'),
-          breakdown: { receivables: dayReceivables, payables: dayPayables, recurItems: dayRecurItems }
+          breakdown: { receivables: dayReceivables, payables: dayPayables }
         };
       });
 
-      const bankAccounts = bankRows.map(r => ({ name: String(r[1] || ''), balance: Number(r[3]) || 0 }));
+      const bankAccounts = bankData.map(r => ({ name: String(r[1] || ''), balance: Number(r[3]) || 0 }));
 
-      const topReceivables = [...recRows].sort((a, b) => (Number(a[10]) || 0) - (Number(b[10]) || 0)).slice(0, 5).map(r => ({
+      const topReceivables = [...recData].sort((a, b) => (Number(b[7]) || 0) - (Number(a[7]) || 0)).slice(0, 5).map(r => ({
         customer: String(r[2] || ''), invoice: String(r[1] || ''),
         amount: Number(r[7]) || 0, daysUntilDue: Number(r[10]) || 0, dueDate: fmtDateDisplay(r[5])
       }));
 
-      const topPayables = [...payRows].sort((a, b) => (Number(a[10]) || 0) - (Number(b[10]) || 0)).slice(0, 5).map(r => ({
+      const topPayables = [...payData].sort((a, b) => (Number(b[7]) || 0) - (Number(a[7]) || 0)).slice(0, 5).map(r => ({
         vendor: String(r[2] || ''), bill: String(r[1] || ''),
         amount: Number(r[7]) || 0, daysUntilDue: Number(r[10]) || 0, dueDate: fmtDateDisplay(r[5])
       }));
 
       const minBalance = projection.length ? Math.min(...projection.map(p => p.balance)) : 0;
-      const config = { projectionDays, criticalThreshold, warningThreshold };
-      const lastSync = recRows[0] && recRows[0][11]
-        ? new Date(recRows[0][11]).toLocaleString('en-AE', { timeZone: 'Asia/Dubai', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      const lastSync = recData[0] && recData[0][11]
+        ? new Date(recData[0][11]).toLocaleString('en-AE', { timeZone: 'Asia/Dubai', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
         : 'N/A';
 
       return {
@@ -1443,7 +1267,7 @@
           overduePayablesAmount: overduePay.reduce((s, r) => s + (Number(r[7]) || 0), 0),
           lastSync
         },
-        projection, bankAccounts, topReceivables, topPayables, config, recurMap
+        projection, bankAccounts, topReceivables, topPayables
       };
     }
 
@@ -1466,11 +1290,8 @@
     function buildTooltipHTML(point) {
       const rec = point.breakdown.receivables;
       const pay = point.breakdown.payables;
-      const _ri = (point.breakdown && point.breakdown.recurItems) || [];
-      const net = point.net !== undefined ? point.net : (point.receivables - point.payables - _ri.reduce((s,r)=>s+r.amount,0));
-      // Use recurItems from RecurringExpenses sheet as source of truth — not row[5] from Projection
-      const recurItems = (point.breakdown && point.breakdown.recurItems) || [];
-      const hasMovements = rec.length > 0 || pay.length > 0 || recurItems.length > 0;
+      const net = point.receivables - point.payables;
+      const hasMovements = rec.length > 0 || pay.length > 0;
       const balClass = point.status === 'Critical' ? 'critical' : point.status === 'Warning' ? 'warning' : 'healthy';
 
       let body = '';
@@ -1479,36 +1300,14 @@
       } else {
         if (rec.length > 0) {
           body += '<div class="pt-section-label">Cash In · Receivables</div>';
-          const recByCustomer = {};
-          rec.forEach(r => { if (!recByCustomer[r.customer]) recByCustomer[r.customer] = []; recByCustomer[r.customer].push(r); });
-          Object.entries(recByCustomer).forEach(([customer, invoices]) => {
-            const sub = invoices.reduce((s, r) => s + r.amount, 0);
-            const hasOverdue = invoices.some(r => r.overdue);
-            const count = invoices.length;
-            body += `<div class="pt-row"><span class="pt-sign in">+</span><div class="pt-info"><div class="pt-ref">${customer}${hasOverdue ? '<span class="pt-overdue-tag">OVERDUE</span>' : ''}</div><div class="pt-name">${count} invoice${count > 1 ? 's' : ''}</div></div><span class="pt-amount in">${fmt(sub)}</span></div>`;
+          rec.forEach(r => {
+            body += `<div class="pt-row"><span class="pt-sign in">+</span><div class="pt-info"><div class="pt-ref">${r.invoice}${r.overdue ? '<span class="pt-overdue-tag">OVERDUE</span>' : ''}</div><div class="pt-name">${r.customer}</div></div><span class="pt-amount in">${fmt(r.amount)}</span></div>`;
           });
         }
         if (pay.length > 0) {
           body += '<div class="pt-section-label">Cash Out · Payables</div>';
-          const payByVendor = {};
-          pay.forEach(p => { if (!payByVendor[p.vendor]) payByVendor[p.vendor] = []; payByVendor[p.vendor].push(p); });
-          Object.entries(payByVendor).forEach(([vendor, bills]) => {
-            const sub = bills.reduce((s, p) => s + p.amount, 0);
-            const hasOverdue = bills.some(p => p.overdue);
-            const count = bills.length;
-            body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">${vendor}${hasOverdue ? '<span class="pt-overdue-tag">OVERDUE</span>' : ''}</div><div class="pt-name">${count} bill${count > 1 ? 's' : ''}</div></div><span class="pt-amount out">${fmt(sub)}</span></div>`;
-          });
-        }
-        const activeRecurItems = recurItems.filter(ri => ri.amount > 0);
-        if (activeRecurItems.length > 0) {
-          body += '<div class="pt-section-label">Cash Out · Recurring Expenses</div>';
-          // Group by category
-          const recurByCat = {};
-          activeRecurItems.forEach(ri => { const k = ri.category || 'Other'; if (!recurByCat[k]) recurByCat[k] = []; recurByCat[k].push(ri); });
-          Object.entries(recurByCat).forEach(([cat, items]) => {
-            const sub = items.reduce((s, r) => s + r.amount, 0);
-            const monthLabel = items[0].monthName ? ' · ' + items[0].monthName : '';
-            body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">${cat}${monthLabel}</div><div class="pt-name">${items.length} item${items.length > 1 ? 's' : ''}</div></div><span class="pt-amount out">${fmt(sub)}</span></div>`;
+          pay.forEach(p => {
+            body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">${p.bill}${p.overdue ? '<span class="pt-overdue-tag">OVERDUE</span>' : ''}</div><div class="pt-name">${p.vendor}</div></div><span class="pt-amount out">${fmt(p.amount)}</span></div>`;
           });
         }
       }
@@ -1547,11 +1346,9 @@
     function openModal(point) {
       const rec = point.breakdown.receivables;
       const pay = point.breakdown.payables;
-      const _ri = (point.breakdown && point.breakdown.recurItems) || [];
-      const net = point.net !== undefined ? point.net : (point.receivables - point.payables - _ri.reduce((s,r)=>s+r.amount,0));
+      const net = point.receivables - point.payables;
       const totalIn = rec.reduce((s, r) => s + r.amount, 0);
-      const modalRI = ((point.breakdown && point.breakdown.recurItems) || []).filter(r => r.amount > 0);
-      const totalOut = pay.reduce((s, p) => s + p.amount, 0) + modalRI.reduce((s, r) => s + r.amount, 0);
+      const totalOut = pay.reduce((s, p) => s + p.amount, 0);
       const balClass = point.status === 'Critical' ? 'red' : point.status === 'Warning' ? 'amber' : 'green';
       const dayLabel = point.dayOffset === 0 ? 'Today' : 'Day ' + point.dayOffset;
 
@@ -1569,68 +1366,29 @@
       if (!rec.length) {
         body += '<div class="modal-empty">No receivables due this day</div>';
       } else {
-        // Group by customer
-        const recByCustomer = {};
-        rec.forEach(r => { if (!recByCustomer[r.customer]) recByCustomer[r.customer] = []; recByCustomer[r.customer].push(r); });
-        body += '<div class="modal-groups">';
-        Object.entries(recByCustomer).forEach(([customer, invoices]) => {
-          const sub = invoices.reduce((s, r) => s + r.amount, 0);
-          const hasOverdue = invoices.some(r => r.overdue);
-          const count = invoices.length;
-          body += `<details class="modal-group"><summary class="modal-group-summary"><span class="modal-group-name">${customer}${hasOverdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</span><span class="modal-group-meta">${count} invoice${count > 1 ? 's' : ''}</span><span class="modal-group-amt in">+${fmt(sub)}</span></summary>`;
-          body += `<table class="modal-table modal-group-table"><thead><tr><th>Invoice</th><th>Due Date</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
-          invoices.forEach(r => {
-            body += `<tr><td><div class="modal-ref">${r.invoice}${r.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div></td><td class="modal-due">${r.originalDue || '—'}</td><td class="modal-amt-in">+${fmt(r.amount)}</td></tr>`;
-          });
-          body += '</tbody></table></details>';
+        body += `<table class="modal-table"><thead><tr><th>Invoice / Customer</th><th>Original Due</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+        rec.forEach(r => {
+          body += `<tr><td><div class="modal-ref">${r.invoice}${r.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div><div class="modal-party">${r.customer}</div></td><td class="modal-due">${r.originalDue || '—'}</td><td class="modal-amt-in">+${fmt(r.amount)}</td></tr>`;
         });
-        if (rec.length > 1) body += `<div class="modal-group-total"><span class="modal-total-label">Total receivables</span><span class="modal-amt-in">+${fmt(totalIn)}</span></div>`;
-        body += '</div>';
+        if (rec.length > 1) body += `<tr class="modal-total-row"><td colspan="2"><span class="modal-total-label">Total receivables</span></td><td class="modal-amt-in">+${fmt(totalIn)}</td></tr>`;
+        body += '</tbody></table>';
       }
       body += '</div>';
 
       body += `<div><div class="modal-section-title"><span class="ms-dot out"></span>Cash Out · Payables</div>`;
-      const modalRecurItems = (point.breakdown && point.breakdown.recurItems) || [];
-      if (!pay.length && !modalRecurItems.length) {
+      if (!pay.length) {
         body += '<div class="modal-empty">No payables due this day</div>';
       } else {
-        // Group by vendor
-        const payByVendor = {};
-        pay.forEach(p => { if (!payByVendor[p.vendor]) payByVendor[p.vendor] = []; payByVendor[p.vendor].push(p); });
-        body += '<div class="modal-groups">';
-        Object.entries(payByVendor).forEach(([vendor, bills]) => {
-          const sub = bills.reduce((s, p) => s + p.amount, 0);
-          const hasOverdue = bills.some(p => p.overdue);
-          const count = bills.length;
-          body += `<details class="modal-group"><summary class="modal-group-summary"><span class="modal-group-name">${vendor}${hasOverdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</span><span class="modal-group-meta">${count} bill${count > 1 ? 's' : ''}</span><span class="modal-group-amt out">−${fmt(sub)}</span></summary>`;
-          body += `<table class="modal-table modal-group-table"><thead><tr><th>Bill</th><th>Due Date</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
-          bills.forEach(p => {
-            body += `<tr><td><div class="modal-ref">${p.bill}${p.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div></td><td class="modal-due">${p.originalDue || '—'}</td><td class="modal-amt-out">−${fmt(p.amount)}</td></tr>`;
-          });
-          body += '</tbody></table></details>';
+        body += `<table class="modal-table"><thead><tr><th>Bill / Vendor</th><th>Original Due</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+        pay.forEach(p => {
+          body += `<tr><td><div class="modal-ref">${p.bill}${p.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div><div class="modal-party">${p.vendor}</div></td><td class="modal-due">${p.originalDue || '—'}</td><td class="modal-amt-out">−${fmt(p.amount)}</td></tr>`;
         });
-        if (modalRecurItems.length > 0) {
-          // Group by category, filter zero-amount
-          const activeModalRecur = modalRecurItems.filter(ri => ri.amount > 0);
-          const recurByCat = {};
-          activeModalRecur.forEach(ri => { const k = ri.category || 'Other'; if (!recurByCat[k]) recurByCat[k] = []; recurByCat[k].push(ri); });
-          Object.entries(recurByCat).forEach(([cat, items]) => {
-            const sub = items.reduce((s, r) => s + r.amount, 0);
-            const monthLabel = items[0].monthName || '';
-            body += `<details class="modal-group"><summary class="modal-group-summary"><span class="modal-group-name">${cat}</span><span class="modal-group-meta">${monthLabel} · ${items.length} item${items.length > 1 ? 's' : ''}</span><span class="modal-group-amt out">−${fmt(sub)}</span></summary>`;
-            body += `<table class="modal-table modal-group-table"><thead><tr><th>Expense</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
-            items.forEach(ri => {
-              body += `<tr><td><div class="modal-ref">${ri.name}</div></td><td class="modal-amt-out">−${fmt(ri.amount)}</td></tr>`;
-            });
-            body += `</tbody></table></details>`;
-          });
-        }
-        if (pay.length > 1 || modalRI.length > 0) body += `<div class="modal-group-total"><span class="modal-total-label">Total payables + recurring</span><span class="modal-amt-out">−${fmt(totalOut)}</span></div>`;
-        body += '</div>'; // close modal-groups
+        if (pay.length > 1) body += `<tr class="modal-total-row"><td colspan="2"><span class="modal-total-label">Total payables</span></td><td class="modal-amt-out">−${fmt(totalOut)}</td></tr>`;
+        body += '</tbody></table>';
       }
       body += '</div>';
 
-      if (rec.length > 0 || pay.length > 0 || (point.recurring || 0) > 0) {
+      if (rec.length > 0 || pay.length > 0) {
         const netClass = net > 0 ? 'positive' : net < 0 ? 'negative' : 'zero';
         const netPrefix = net > 0 ? '+' : net < 0 ? '−' : '';
         const netLabel = net > 0 ? 'Net inflow — more cash coming in than going out' : net < 0 ? 'Net outflow — more cash going out than coming in' : 'Balanced';
@@ -1662,8 +1420,8 @@
       const hasOverdue = s.overdueReceivablesCount > 0 || s.overduePayablesCount > 0;
       const overdueBar = hasOverdue ? `
     <div class="alert-bar">
-      <div><div class="alert-title">⚠ Overdue Receivables</div><div class="alert-value">${fmt(s.overdueReceivablesAmount)}</div><div style="font-size:10px;color:#666">${s.overdueReceivablesCount} invoice(s) past due</div></div>
-      <div><div class="alert-title">⚠ Overdue Payables</div><div class="alert-value">${fmt(s.overduePayablesAmount)}</div><div style="font-size:10px;color:#666">${s.overduePayablesCount} bill(s) past due</div></div>
+      <div><div class="alert-title">⚠ Overdue Receivables</div><div class="alert-value">${fmt(s.overdueReceivablesAmount)}</div><div style="font-size:9px;color:#666">${s.overdueReceivablesCount} invoice(s) past due</div></div>
+      <div><div class="alert-title">⚠ Overdue Payables</div><div class="alert-value">${fmt(s.overduePayablesAmount)}</div><div style="font-size:9px;color:#666">${s.overduePayablesCount} bill(s) past due</div></div>
       <div class="alert-note">These amounts are reflected in today's projection</div>
     </div>` : '';
 
@@ -1680,7 +1438,7 @@
     </div>
 
     <div class="panel">
-      <div class="panel-title">${data.config.projectionDays}-Day Projected Balance</div>
+      <div class="panel-title">60-Day Projected Balance</div>
       <div class="chart-hint">↖ Click any point to see day detail</div>
       <canvas id="projectionChart"></canvas>
     </div>
@@ -1698,15 +1456,15 @@
       <div class="panel">
         <div class="panel-title">Upcoming Receivables</div>
         ${data.topReceivables.length === 0
-          ? '<div style="color:var(--dim);font-size:12px;padding:20px 0">No unpaid invoices</div>'
-          : `<table class="data-table"><thead><tr><th>Customer</th><th>Amount</th><th>Status</th></tr></thead><tbody>${data.topReceivables.map(r => `<tr><td><div>${r.customer}</div><div style="color:var(--dim);font-size:10px">${r.invoice} · ${r.dueDate}</div></td><td class="amount-green">${fmt(r.amount)}</td><td>${getDayBadge(r.daysUntilDue)}</td></tr>`).join('')}</tbody></table>`}
+          ? '<div style="color:var(--dim);font-size:11px;padding:20px 0">No unpaid invoices</div>'
+          : `<table class="data-table"><thead><tr><th>Customer</th><th>Amount</th><th>Status</th></tr></thead><tbody>${data.topReceivables.map(r => `<tr><td><div>${r.customer}</div><div style="color:var(--dim);font-size:9px">${r.invoice} · ${r.dueDate}</div></td><td class="amount-green">${fmt(r.amount)}</td><td>${getDayBadge(r.daysUntilDue)}</td></tr>`).join('')}</tbody></table>`}
       </div>
     </div>
 
     <div class="panel">
       <div class="panel-title">Upcoming Payables</div>
       ${data.topPayables.length === 0
-          ? '<div style="color:var(--dim);font-size:12px;padding:20px 0">No unpaid bills</div>'
+          ? '<div style="color:var(--dim);font-size:11px;padding:20px 0">No unpaid bills</div>'
           : `<table class="data-table"><thead><tr><th>Vendor</th><th>Bill</th><th>Amount</th><th>Due Date</th><th>Status</th></tr></thead><tbody>${data.topPayables.map(p => `<tr><td>${p.vendor}</td><td style="color:var(--dim)">${p.bill}</td><td class="amount-red">${fmt(p.amount)}</td><td style="color:var(--dim)">${p.dueDate}</td><td>${getDayBadge(p.daysUntilDue)}</td></tr>`).join('')}</tbody></table>`}
     </div>`;
 
@@ -1715,9 +1473,8 @@
       const labels = data.projection.map(p => p.date);
       const balances = data.projection.map(p => p.balance);
       const recVals = data.projection.map(p => p.receivables);
-      const payVals = data.projection.map(p => p.payables + p.recurring); // includes recurring expenses
-      const critical = data.config.criticalThreshold;
-      const warning = data.config.warningThreshold;
+      const payVals = data.projection.map(p => p.payables);
+      const critical = 10000, warning = 20000;
 
       const projMax = Math.max(...balances);
       const projMin = Math.min(...balances);
@@ -1737,7 +1494,7 @@
       wrapCanvas('flowChart', 260);
 
       const chartDefaults = {
-        x: { ticks: { color: '#888', font: { family: 'Nunito Sans', size: 9 }, maxTicksLimit: 10 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        x: { ticks: { color: '#555', font: { family: 'Nunito Sans', size: 9 }, maxTicksLimit: 10 }, grid: { color: 'rgba(255,255,255,0.05)' } },
       };
 
       new Chart(document.getElementById('projectionChart'), {
@@ -1754,12 +1511,12 @@
           responsive: true, maintainAspectRatio: false,
           interaction: { mode: 'index', intersect: false },
           plugins: {
-            legend: { labels: { color: '#999', font: { family: 'Nunito Sans', size: 10 }, boxWidth: 12 } },
+            legend: { labels: { color: '#555', font: { family: 'Nunito Sans', size: 10 }, boxWidth: 12 } },
             tooltip: { enabled: false, external: projectionTooltipHandler }
           },
           scales: {
             x: chartDefaults.x,
-            y: { min: yMin, max: yMax, ticks: { color: '#888', font: { family: 'Nunito Sans', size: 9 }, callback: v => 'AED ' + (v / 1000).toFixed(0) + 'k' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            y: { min: yMin, max: yMax, ticks: { color: '#555', font: { family: 'Nunito Sans', size: 9 }, callback: v => 'AED ' + (v / 1000).toFixed(0) + 'k' }, grid: { color: 'rgba(255,255,255,0.05)' } }
           },
           onClick: (evt, elements, chart) => {
             const pts = chart.getElementsAtEventForMode(evt.native, 'index', { intersect: false }, false);
@@ -1789,7 +1546,7 @@
         options: {
           responsive: true, maintainAspectRatio: false,
           plugins: {
-            legend: { labels: { color: '#999', font: { family: 'Nunito Sans', size: 10 }, boxWidth: 12 } },
+            legend: { labels: { color: '#555', font: { family: 'Nunito Sans', size: 10 }, boxWidth: 12 } },
             tooltip: {
               backgroundColor: '#0d0d0d', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, titleColor: '#fff', bodyColor: '#e8e8e8',
               callbacks: { label: ctx => ' ' + ctx.dataset.label + ': AED ' + Math.abs(ctx.parsed.y).toLocaleString('en-AE', { maximumFractionDigits: 0 }) }
@@ -1797,7 +1554,7 @@
           },
           scales: {
             x: chartDefaults.x,
-            y: { min: -flowYMax, max: flowYMax, ticks: { color: '#888', font: { family: 'Nunito Sans', size: 9 }, callback: v => 'AED ' + (v / 1000).toFixed(0) + 'k' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            y: { min: -flowYMax, max: flowYMax, ticks: { color: '#555', font: { family: 'Nunito Sans', size: 9 }, callback: v => 'AED ' + (v / 1000).toFixed(0) + 'k' }, grid: { color: 'rgba(255,255,255,0.05)' } }
           }
         }
       });
@@ -1847,13 +1604,7 @@
       try {
         await initMsal();
         _token = await getTokenSilent();
-        if (_token) {
-          const accounts = _msal.getAllAccounts();
-          if (accounts.length && !isAllowedUser(accounts[0])) { showAccessDenied(accounts[0].username); return; }
-          loadAndRender();
-        } else {
-          showLogin();
-        }
+        if (_token) { loadAndRender(); } else { showLogin(); }
       } catch (err) {
         document.getElementById('dashboard').innerHTML = '<div class="loading">⚠ Auth error: ' + err.message + '</div>';
       }
