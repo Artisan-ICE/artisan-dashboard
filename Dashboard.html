@@ -1283,13 +1283,28 @@
     }
 
     async function getSheet(name) {
-      // Access via share token — works with Files.Read for site members
-      const shareToken = 'u!aHR0cHM6Ly9hcnRpc2FuaWNlY28uc2hhcmVwb2ludC5jb20vc2l0ZXMvQXJ0aXNhbkljZUNvL1NoYXJlZCBEb2N1bWVudHMvQ2FzaGZsb3cvWmVhbGFudFVBRV9DYXNoRmxvdy54bHN4';
-      const d = await graphGet(
-        '/shares/' + shareToken +
-        '/driveItem/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange'
-      );
-      return d.values || [];
+      // Try multiple share token formats until one works
+      const shareTokens = [
+        'u!aHR0cHM6Ly9hcnRpc2FuaWNlY28uc2hhcmVwb2ludC5jb20vOng6L3Ivc2l0ZXMvQXJ0aXNhbkljZUNvL19sYXlvdXRzLzE1L0RvYy5hc3B4P3NvdXJjZWRvYz0lN0I2NEI1ODczNi0xRDVCLTQyNDItQUM1QS1FMDg0MTUxMUZDNTUlN0QmZmlsZT1aZWFsYW50VUFFX0Nhc2hGbG93Lnhsc3gmYWN0aW9uPWRlZmF1bHQmbW9iaWxlcmVkaXJlY3Q9dHJ1ZQ',
+        'u!aHR0cHM6Ly9hcnRpc2FuaWNlY28uc2hhcmVwb2ludC5jb20vc2l0ZXMvQXJ0aXNhbkljZUNvL19sYXlvdXRzLzE1L0RvYy5hc3B4P3NvdXJjZWRvYz17NjRCNTg3MzYtMUQ1Qi00MjQyLUFDNUEtRTA4NDE1MTFGQzU1fQ'
+      ];
+      let lastErr = null;
+      for (const token of shareTokens) {
+        try {
+          const d = await graphGet('/shares/' + token + '/driveItem/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange');
+          if (d.values) {
+            // Cache the working token
+            window._workingShareToken = token;
+            return d.values;
+          }
+        } catch(e) { lastErr = e; }
+      }
+      // If we found a working token previously, use it directly
+      if (window._workingShareToken) {
+        const d = await graphGet('/shares/' + window._workingShareToken + '/driveItem/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange');
+        return d.values || [];
+      }
+      throw lastErr || new Error('All share tokens failed');
     }
 
 
