@@ -1185,51 +1185,100 @@
     // CONFIG
     // ═══════════════════════════════════════════════════════
     const CONFIG = {
-      TENANT_ID:     '07b046b3-6a82-4b7b-a260-d152326e558f',
-      CLIENT_ID:     '7fac838d-cace-4a69-822d-64db84c8a494',
-      CLIENT_SECRET: '7cd254bd-f847-4ab4-9e4b-7d41cf111fce', // ← paste client secret here
-      SITE_ID:       'artisaniceco.sharepoint.com,efad93e0-484a-48d0-8231-637401c87c10,c7231184-fe72-4145-96d8-4d866e292bff',
-      FILE_PATH:     'Cashflow/ZealantUAE_CashFlow.xlsx',
-      FLOW_URL:      'https://default07b046b36a824b7ba260d152326e55.8f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/41b56361ff5b4de0af17d6c15f7acfca/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=88dr1aIPYgvJiidsvRBjvb9HKAdJinU3uf6ZKuSizJ0'
+      CLIENT_ID:  '7fac838d-cace-4a69-822d-64db84c8a494',
+      TENANT_ID:  '07b046b3-6a82-4b7b-a260-d152326e558f',
+      SITE_ID:    'artisaniceco.sharepoint.com,efad93e0-484a-48d0-8231-637401c87c10,c7231184-fe72-4145-96d8-4d866e292bff',
+      FILE_PATH:  'Cashflow/ZealantUAE_CashFlow.xlsx',
+      REDIRECT:   'https://artisan-ice.github.io/artisan-dashboard/',
+      FLOW_URL:   'https://default07b046b36a824b7ba260d152326e55.8f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/41b56361ff5b4de0af17d6c15f7acfca/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=88dr1aIPYgvJiidsvRBjvb9HKAdJinU3uf6ZKuSizJ0',
+      ALLOWED_USERS: [
+        'accounts@artisaniceco.com'
+      ]
     };
 
     // ═══════════════════════════════════════════════════════
-    // AUTH — client credentials (no user login required)
+    // AUTH — MSAL delegated login
     // ═══════════════════════════════════════════════════════
-    let _token = null;
-    let _tokenExpiry = 0;
+    let _token = null, _msal = null;
 
-    async function getToken() {
-      if (_token && Date.now() < _tokenExpiry) return _token;
-      const res = await fetch(
-        'https://login.microsoftonline.com/' + CONFIG.TENANT_ID + '/oauth2/v2.0/token',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            grant_type:    'client_credentials',
-            client_id:     CONFIG.CLIENT_ID,
-            client_secret: CONFIG.CLIENT_SECRET,
-            scope:         'https://graph.microsoft.com/.default'
-          })
-        }
-      );
-      const d = await res.json();
-      if (!d.access_token) throw new Error('Token error: ' + (d.error_description || d.error || JSON.stringify(d)));
-      _token = d.access_token;
-      _tokenExpiry = Date.now() + (d.expires_in - 60) * 1000;
-      return _token;
+    function loadScript(src) {
+      return new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = src; s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
     }
 
-    async function graphGet(path) {
-      const token = await getToken();
-      const r = await fetch('https://graph.microsoft.com/v1.0' + path, {
-        headers: { Authorization: 'Bearer ' + token }
+    async function initMsal() {
+      await loadScript('https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.28.1/lib/msal-browser.min.js');
+      _msal = new msal.PublicClientApplication({
+        auth: { clientId: CONFIG.CLIENT_ID, authority: 'https://login.microsoftonline.com/' + CONFIG.TENANT_ID, redirectUri: CONFIG.REDIRECT },
+        cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
       });
-      if (!r.ok) {
-        const e = await r.json().catch(() => ({}));
-        throw new Error('Graph ' + r.status + ': ' + (e?.error?.message || ''));
-      }
+      await _msal.initialize();
+    }
+
+    async function getTokenSilent() {
+      const accounts = _msal.getAllAccounts();
+      if (!accounts.length) return null;
+      try {
+        const r = await _msal.acquireTokenSilent({ scopes: ['Files.Read'], account: accounts[0] });
+        return r.accessToken;
+      } catch (e) { return null; }
+    }
+
+    function isAllowedUser(account) {
+      if (!CONFIG.ALLOWED_USERS || CONFIG.ALLOWED_USERS.length === 0) return true;
+      const email = (account.username || account.upn || '').toLowerCase();
+      return CONFIG.ALLOWED_USERS.map(e => e.toLowerCase()).includes(email);
+    }
+
+    function showAccessDenied(email) {
+      document.getElementById('dashboard').innerHTML = `
+        <div class="login-screen">
+          <div class="logo-box" style="border-color:rgba(224,92,92,0.4)">
+            <img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div>
+          </div>
+          <div class="login-title" style="color:var(--red)">Access Denied</div>
+          <div class="login-sub" style="color:#888">${email} is not authorised to view this dashboard.<br><br>Contact Artisan Ice Co. to request access.</div>
+          <button class="login-btn" onclick="_msal.logoutPopup().then(()=>location.reload())">Sign out</button>
+        </div>`;
+    }
+
+    function showLogin() {
+      document.getElementById('syncInfo').textContent = '';
+      document.getElementById('dashboard').innerHTML = `
+        <div class="login-screen">
+          <div class="logo-box" style="border-color:rgba(142,202,230,0.5)"><img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div></div>
+          <div class="login-title"><em>Cash Flow</em> Projection</div>
+          <div class="login-sub">Sign in with your Microsoft 365 account to access the live dashboard</div>
+          <button class="login-btn" id="signInBtn">Sign in with Microsoft</button>
+          <div class="login-err" id="loginErr"></div>
+        </div>`;
+      document.getElementById('signInBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('signInBtn');
+        btn.textContent = 'Signing in...'; btn.disabled = true;
+        try {
+          const r = await _msal.loginPopup({ scopes: ['Files.Read'] });
+          _token = r.accessToken;
+          if (!isAllowedUser(r.account)) { showAccessDenied(r.account.username); return; }
+          loadAndRender();
+        } catch (e) {
+          btn.textContent = 'Sign in with Microsoft'; btn.disabled = false;
+          const el = document.getElementById('loginErr');
+          el.style.display = 'block'; el.textContent = e.message || String(e);
+        }
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // GRAPH API
+    // ═══════════════════════════════════════════════════════
+    async function graphGet(path) {
+      const r = await fetch('https://graph.microsoft.com/v1.0' + path, {
+        headers: { Authorization: 'Bearer ' + _token }
+      });
+      if (!r.ok) throw new Error('Graph ' + r.status);
       return r.json();
     }
 
@@ -1793,11 +1842,19 @@
     }
 
     async function init() {
-      if (!CONFIG.CLIENT_SECRET || CONFIG.CLIENT_SECRET === 'YOUR_CLIENT_SECRET_HERE') {
-        document.getElementById('dashboard').innerHTML = '<div class="loading">⚠ Client secret not configured — paste secret into CONFIG.CLIENT_SECRET</div>';
-        return;
+      try {
+        await initMsal();
+        _token = await getTokenSilent();
+        if (_token) {
+          const accounts = _msal.getAllAccounts();
+          if (accounts.length && !isAllowedUser(accounts[0])) { showAccessDenied(accounts[0].username); return; }
+          loadAndRender();
+        } else {
+          showLogin();
+        }
+      } catch (err) {
+        document.getElementById('dashboard').innerHTML = '<div class="loading">⚠ Auth error: ' + err.message + '</div>';
       }
-      loadAndRender();
     }
 
     init();
