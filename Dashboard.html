@@ -1185,133 +1185,61 @@
     // CONFIG
     // ═══════════════════════════════════════════════════════
     const CONFIG = {
-      CLIENT_ID: '7fac838d-cace-4a69-822d-64db84c8a494',
-      TENANT_ID: '07b046b3-6a82-4b7b-a260-d152326e558f',
-      DRIVE_ID: 'b!4JOt70pI0EiCMWN0Ach8EAjU2C5_b6dUK-P4bVY4Q3Tw',
-      FILE_ID: 'Noe1ZFsdQkKsWuCEFRH8VQ',
-      SITE_ID: 'artisaniceco.sharepoint.com,efad93e0-484a-48d0-8231-637401c87c10,c7231184-fe72-4145-96d8-4d866e292bff',
-      FILE_PATH: 'Cashflow/ZealantUAE_CashFlow.xlsx',
-      SHARE_TOKEN: 'u!aHR0cHM6Ly9hcnRpc2FuaWNlY28uc2hhcmVwb2ludC5jb20vc2l0ZXMvQXJ0aXNhbkljZUNvL1NoYXJlZCBEb2N1bWVudHMvQ2FzaGZsb3cvWmVhbGFudFVBRV9DYXNoRmxvdy54bHN4',
-      REDIRECT: 'https://artisan-ice.github.io/artisan-dashboard/',
-      FLOW_URL: 'https://default07b046b36a824b7ba260d152326e55.8f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/41b56361ff5b4de0af17d6c15f7acfca/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=88dr1aIPYgvJiidsvRBjvb9HKAdJinU3uf6ZKuSizJ0',
-      // ── Allowed users — add/remove emails here ──────────────
-      ALLOWED_USERS: [
-        'accounts@artisaniceco.com',
-        'rafi@example.com'
-        // add more emails here
-      ]
+      TENANT_ID:     '07b046b3-6a82-4b7b-a260-d152326e558f',
+      CLIENT_ID:     '7fac838d-cace-4a69-822d-64db84c8a494',
+      CLIENT_SECRET: 'YOUR_CLIENT_SECRET_HERE', // ← paste client secret here
+      SITE_ID:       'artisaniceco.sharepoint.com,efad93e0-484a-48d0-8231-637401c87c10,c7231184-fe72-4145-96d8-4d866e292bff',
+      FILE_PATH:     'Cashflow/ZealantUAE_CashFlow.xlsx',
+      FLOW_URL:      'https://default07b046b36a824b7ba260d152326e55.8f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/41b56361ff5b4de0af17d6c15f7acfca/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=88dr1aIPYgvJiidsvRBjvb9HKAdJinU3uf6ZKuSizJ0'
     };
 
     // ═══════════════════════════════════════════════════════
-    // AUTH
+    // AUTH — client credentials (no user login required)
     // ═══════════════════════════════════════════════════════
-    let _token = null, _msal = null;
+    let _token = null;
+    let _tokenExpiry = 0;
 
-    function loadScript(src) {
-      return new Promise((res, rej) => {
-        const s = document.createElement('script');
-        s.src = src; s.onload = res; s.onerror = rej;
-        document.head.appendChild(s);
-      });
-    }
-
-    async function initMsal() {
-      await loadScript('https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.28.1/lib/msal-browser.min.js');
-      _msal = new msal.PublicClientApplication({
-        auth: { clientId: CONFIG.CLIENT_ID, authority: 'https://login.microsoftonline.com/' + CONFIG.TENANT_ID, redirectUri: CONFIG.REDIRECT },
-        cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
-      });
-      await _msal.initialize();
-    }
-
-    async function getTokenSilent() {
-      const accounts = _msal.getAllAccounts();
-      if (!accounts.length) return null;
-      try {
-        const r = await _msal.acquireTokenSilent({ scopes: ['Files.Read'], account: accounts[0] });
-        return r.accessToken;
-      } catch (e) { return null; }
-    }
-
-    function showLogin() {
-      document.getElementById('syncInfo').textContent = '';
-      document.getElementById('dashboard').innerHTML = `
-    <div class="login-screen">
-      <div class="logo-box" style="border-color:rgba(142,202,230,0.5)"><img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div></div>
-      <div class="login-title"><em>Cash Flow</em> Projection</div>
-      <div class="login-sub">Sign in with your Microsoft 365 account to access the live dashboard</div>
-      <button class="login-btn" id="signInBtn">Sign in with Microsoft</button>
-      <div class="login-err" id="loginErr"></div>
-    </div>`;
-      document.getElementById('signInBtn').addEventListener('click', async () => {
-        const btn = document.getElementById('signInBtn');
-        btn.textContent = 'Signing in...'; btn.disabled = true;
-        try {
-          const r = await _msal.loginPopup({ scopes: ['Files.Read'] });
-          _token = r.accessToken;
-          if (!isAllowedUser(r.account)) {
-            showAccessDenied(r.account.username);
-            return;
-          }
-          loadAndRender();
-        } catch (e) {
-          btn.textContent = 'Sign in with Microsoft'; btn.disabled = false;
-          const el = document.getElementById('loginErr');
-          el.style.display = 'block'; el.textContent = e.message || String(e);
+    async function getToken() {
+      if (_token && Date.now() < _tokenExpiry) return _token;
+      const res = await fetch(
+        'https://login.microsoftonline.com/' + CONFIG.TENANT_ID + '/oauth2/v2.0/token',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            grant_type:    'client_credentials',
+            client_id:     CONFIG.CLIENT_ID,
+            client_secret: CONFIG.CLIENT_SECRET,
+            scope:         'https://graph.microsoft.com/.default'
+          })
         }
-      });
+      );
+      const d = await res.json();
+      if (!d.access_token) throw new Error('Token error: ' + (d.error_description || d.error || JSON.stringify(d)));
+      _token = d.access_token;
+      _tokenExpiry = Date.now() + (d.expires_in - 60) * 1000;
+      return _token;
     }
 
-    // ═══════════════════════════════════════════════════════
-    // GRAPH API
-    // ═══════════════════════════════════════════════════════
     async function graphGet(path) {
+      const token = await getToken();
       const r = await fetch('https://graph.microsoft.com/v1.0' + path, {
-        headers: { Authorization: 'Bearer ' + _token }
+        headers: { Authorization: 'Bearer ' + token }
       });
-      if (!r.ok) throw new Error('Graph ' + r.status);
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        throw new Error('Graph ' + r.status + ': ' + (e?.error?.message || ''));
+      }
       return r.json();
     }
 
     async function getSheet(name) {
       const d = await graphGet(
-        '/shares/' + CONFIG.SHARE_TOKEN +
-        '/driveItem/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange'
+        '/sites/' + CONFIG.SITE_ID +
+        '/drive/root:/' + CONFIG.FILE_PATH +
+        ':/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange'
       );
       return d.values || [];
-    }
-
-    async function graphGetWithRetry(path) {
-      // Try current FILE_ID, then fallback to alternate encodings
-      const altIds = [
-        CONFIG.FILE_ID,
-        'ZLWHNh1bQkKsWuCEFRH8VQ',  // straight base64url
-        '64B58736-1D5B-4242-AC5A-E0841511FC55'  // raw GUID
-      ];
-      const altDrives = [
-        CONFIG.DRIVE_ID,
-        'b!hBEjx3L-RUGW2E2Gbikr_wjU2C5_b6dUK-P4bVY4Q3Tw'  // alt site guid
-      ];
-      for (const driveId of altDrives) {
-        for (const fileId of altIds) {
-          try {
-            const testPath = path.replace(CONFIG.DRIVE_ID, driveId).replace(CONFIG.FILE_ID, fileId);
-            const r = await fetch('https://graph.microsoft.com/v1.0' + testPath, {
-              headers: { Authorization: 'Bearer ' + _token }
-            });
-            if (r.ok) {
-              // Found working combo — update CONFIG
-              CONFIG.DRIVE_ID = driveId;
-              CONFIG.FILE_ID = fileId;
-              console.log('Working DRIVE_ID:', driveId, 'FILE_ID:', fileId);
-              return r.json();
-            }
-            const err = await r.json().catch(() => ({}));
-            console.log('Tried DRIVE:', driveId.substring(0,20), 'FILE:', fileId.substring(0,20), '→', r.status, err?.error?.code);
-          } catch(e) { console.log('Fetch error:', e.message); }
-        }
-      }
-      throw new Error('Could not access Excel file — tried all ID combinations');
     }
 
 
@@ -1349,11 +1277,6 @@
     }
 
     async function getDashboardData() {
-      // First call uses retry logic to find working ID combination
-      const testPath = '/drives/' + CONFIG.DRIVE_ID + '/items/' + CONFIG.FILE_ID +
-        '/workbook/worksheets/' + encodeURIComponent('Config') + '/usedRange';
-      await graphGetWithRetry(testPath).catch(() => {});
-
       const [recRaw, payRaw, bankRaw, projRaw, cfgRaw, recurRaw] = await Promise.all([
         getSheet('Receivables'), getSheet('Payables'),
         getSheet('BankBalances'), getSheet('Projection'),
@@ -1869,41 +1792,12 @@
       }
     }
 
-    function isAllowedUser(account) {
-      if (!CONFIG.ALLOWED_USERS || CONFIG.ALLOWED_USERS.length === 0) return true; // open if no list defined
-      const email = (account.username || account.upn || '').toLowerCase();
-      return CONFIG.ALLOWED_USERS.map(e => e.toLowerCase()).includes(email);
-    }
-
-    function showAccessDenied(email) {
-      document.getElementById('dashboard').innerHTML = `
-        <div class="login-screen">
-          <div class="logo-box" style="border-color:rgba(224,92,92,0.4)">
-            <img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;">
-          </div>
-          <div class="login-title" style="color:var(--red)">Access Denied</div>
-          <div class="login-sub" style="color:#888">${email} is not authorised to view this dashboard.<br><br>Contact Artisan Ice Co. to request access.</div>
-          <button class="login-btn" onclick="_msal.logoutPopup().then(()=>location.reload())">Sign out</button>
-        </div>`;
-    }
-
     async function init() {
-      try {
-        await initMsal();
-        _token = await getTokenSilent();
-        if (_token) {
-          const accounts = _msal.getAllAccounts();
-          if (accounts.length && !isAllowedUser(accounts[0])) {
-            showAccessDenied(accounts[0].username);
-            return;
-          }
-          loadAndRender();
-        } else {
-          showLogin();
-        }
-      } catch (err) {
-        document.getElementById('dashboard').innerHTML = '<div class="loading">⚠ Auth error: ' + err.message + '</div>';
+      if (!CONFIG.CLIENT_SECRET || CONFIG.CLIENT_SECRET === 'YOUR_CLIENT_SECRET_HERE') {
+        document.getElementById('dashboard').innerHTML = '<div class="loading">⚠ Client secret not configured — paste secret into CONFIG.CLIENT_SECRET</div>';
+        return;
       }
+      loadAndRender();
     }
 
     init();
