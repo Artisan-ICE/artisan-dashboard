@@ -1261,9 +1261,35 @@
     }
 
     async function getSheet(name) {
+      // Try all ID combinations until one works, then cache it
+      if (!window._workingDriveId) {
+        const combos = [
+          ['b!4JOt70pI0EiCMWN0Ach8EAjU2C5_b6dUK-P4bVY4Q3Tw', 'Noe1ZFsdQkKsWuCEFRH8VQ'],
+          ['b!4JOt70pI0EiCMWN0Ach8EAjU2C5_b6dUK-P4bVY4Q3Tw', 'ZLWHNh1bQkKsWuCEFRH8VQ'],
+          ['b!4JOt70pI0EiCMWN0Ach8EAjU2C5_b6dUK-P4bVY4Q3Tw', '64B58736-1D5B-4242-AC5A-E0841511FC55'],
+          ['b!hBEjx3L-RUGW2E2Gbikr_wjU2C5_b6dUK-P4bVY4Q3Tw', 'Noe1ZFsdQkKsWuCEFRH8VQ'],
+          ['b!hBEjx3L-RUGW2E2Gbikr_wjU2C5_b6dUK-P4bVY4Q3Tw', 'ZLWHNh1bQkKsWuCEFRH8VQ'],
+          ['b!hBEjx3L-RUGW2E2Gbikr_wjU2C5_b6dUK-P4bVY4Q3Tw', '64B58736-1D5B-4242-AC5A-E0841511FC55'],
+        ];
+        for (const [driveId, fileId] of combos) {
+          try {
+            const r = await fetch(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${fileId}/workbook/worksheets/Config/usedRange`, {
+              headers: { Authorization: 'Bearer ' + _token }
+            });
+            if (r.ok) {
+              window._workingDriveId = driveId;
+              window._workingFileId = fileId;
+              console.log('Working combo:', driveId.slice(0,20), fileId);
+              break;
+            }
+            console.log('Failed:', driveId.slice(0,20), fileId, r.status);
+          } catch(e) {}
+        }
+        if (!window._workingDriveId) throw new Error('Could not find working Drive/File ID combination');
+      }
       const d = await graphGet(
-        '/drives/' + CONFIG.DRIVE_ID +
-        '/items/' + CONFIG.FILE_ID +
+        '/drives/' + window._workingDriveId +
+        '/items/' + window._workingFileId +
         '/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange'
       );
       return d.values || [];
