@@ -1284,7 +1284,7 @@
 
     async function getSheet(name) {
       // Access via share token — works with Files.Read for site members
-      const shareToken = 'u!aHR0cHM6Ly9hcnRpc2FuaWNlY28uc2hhcmVwb2ludC5jb20vc2l0ZXMvQXJ0aXNhbkljZUNvL1NoYXJlZCUyMERvY3VtZW50cy9DYXNoZmxvdy9aZWFsYW50VUFFX0Nhc2hGbG93Lnhsc3g';
+      const shareToken = 'u!aHR0cHM6Ly9hcnRpc2FuaWNlY28uc2hhcmVwb2ludC5jb20vc2l0ZXMvQXJ0aXNhbkljZUNvL1NoYXJlZCBEb2N1bWVudHMvQ2FzaGZsb3cvWmVhbGFudFVBRV9DYXNoRmxvdy54bHN4';
       const d = await graphGet(
         '/shares/' + shareToken +
         '/driveItem/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange'
