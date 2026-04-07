@@ -1403,7 +1403,10 @@
     // HELPERS
     // ═══════════════════════════════════════════════════════
     function fmt(n) {
-      return 'AED ' + Math.abs(n).toLocaleString('en-AE', { maximumFractionDigits: 0 });
+      const abs = Math.abs(n);
+      // Show decimals only if the value has them
+      const hasDec = abs % 1 !== 0;
+      return 'AED ' + abs.toLocaleString('en-AE', { minimumFractionDigits: hasDec ? 2 : 0, maximumFractionDigits: 2 });
     }
 
     function getDayBadge(days) {
