@@ -73,8 +73,11 @@
 
     .logo-box {
       border: 1px solid rgba(142, 202, 230, 0.5);
-      padding: 10px 13px;
+      padding: 8px 10px;
       flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .logo-text {
@@ -1035,11 +1038,11 @@
     <div class="header">
       <div class="logo-block">
         <div class="logo-box">
-          <div class="logo-text">ARTISAN<br>ICE CO.</div>
+          <img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div>
         </div>
         <div class="header-title">
-          <h1><em>Cash Flow Projection</em></h1>
-        
+          <h1><em>Cash Flow</em> Projection</h1>
         </div>
       </div>
       <div class="header-right">
@@ -1123,8 +1126,8 @@
       document.getElementById('syncInfo').textContent = '';
       document.getElementById('dashboard').innerHTML = `
     <div class="login-screen">
-      <div class="logo-box" style="border-color:rgba(142,202,230,0.5)"><div class="logo-text">ARTISAN<br>ICE CO.</div></div>
-      <div class="login-title"><em>Cash Flow</em> Intelligence</div>
+      <div class="logo-box" style="border-color:rgba(142,202,230,0.5)"><img src="./logo.svg" alt="Artisan Ice Co." style="height:40px;width:auto;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="logo-text" style="display:none">ARTISAN<br>ICE CO.</div></div>
+      <div class="login-title"><em>Cash Flow</em> Projection</div>
       <div class="login-sub">Sign in with your Microsoft 365 account to access the live dashboard</div>
       <button class="login-btn" id="signInBtn">Sign in with Microsoft</button>
       <div class="login-err" id="loginErr"></div>
@@ -1234,6 +1237,7 @@
           balance: Number(row[7]) || 0,
           receivables: Number(row[3]) || 0,
           payables: Number(row[4]) || 0,
+          recurring: Number(row[5]) || 0,
           status: String(row[8] || 'Healthy'),
           breakdown: { receivables: dayReceivables, payables: dayPayables }
         };
@@ -1310,6 +1314,10 @@
             body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">${p.bill}${p.overdue ? '<span class="pt-overdue-tag">OVERDUE</span>' : ''}</div><div class="pt-name">${p.vendor}</div></div><span class="pt-amount out">${fmt(p.amount)}</span></div>`;
           });
         }
+        if ((point.recurring || 0) > 0) {
+          body += '<div class="pt-section-label">Cash Out · Recurring</div>';
+          body += `<div class="pt-row"><span class="pt-sign out">−</span><div class="pt-info"><div class="pt-ref">Recurring Expenses</div></div><span class="pt-amount out">${fmt(point.recurring)}</span></div>`;
+        }
       }
 
       const netClass = net > 0 ? 'positive' : net < 0 ? 'negative' : 'zero';
@@ -1348,7 +1356,7 @@
       const pay = point.breakdown.payables;
       const net = point.receivables - point.payables;
       const totalIn = rec.reduce((s, r) => s + r.amount, 0);
-      const totalOut = pay.reduce((s, p) => s + p.amount, 0);
+      const totalOut = pay.reduce((s, p) => s + p.amount, 0) + (point.recurring || 0);
       const balClass = point.status === 'Critical' ? 'red' : point.status === 'Warning' ? 'amber' : 'green';
       const dayLabel = point.dayOffset === 0 ? 'Today' : 'Day ' + point.dayOffset;
 
@@ -1383,12 +1391,19 @@
         pay.forEach(p => {
           body += `<tr><td><div class="modal-ref">${p.bill}${p.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div><div class="modal-party">${p.vendor}</div></td><td class="modal-due">${p.originalDue || '—'}</td><td class="modal-amt-out">−${fmt(p.amount)}</td></tr>`;
         });
-        if (pay.length > 1) body += `<tr class="modal-total-row"><td colspan="2"><span class="modal-total-label">Total payables</span></td><td class="modal-amt-out">−${fmt(totalOut)}</td></tr>`;
+        if ((point.recurring || 0) > 0) {
+          body += `<tr><td><div class="modal-ref">Recurring Expenses</div><div class="modal-party">Daily recurring</div></td><td class="modal-due">—</td><td class="modal-amt-out">−${fmt(point.recurring)}</td></tr>`;
+        }
+        if (pay.length > 1 || (point.recurring || 0) > 0) body += `<tr class="modal-total-row"><td colspan="2"><span class="modal-total-label">Total payables + recurring</span></td><td class="modal-amt-out">−${fmt(totalOut)}</td></tr>`;
+        body += '</tbody></table>';
+      } else if ((point.recurring || 0) > 0) {
+        body += `<table class="modal-table"><thead><tr><th>Description</th><th>Date</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+        body += `<tr><td><div class="modal-ref">Recurring Expenses</div></td><td class="modal-due">—</td><td class="modal-amt-out">−${fmt(point.recurring)}</td></tr>`;
         body += '</tbody></table>';
       }
       body += '</div>';
 
-      if (rec.length > 0 || pay.length > 0) {
+      if (rec.length > 0 || pay.length > 0 || (point.recurring || 0) > 0) {
         const netClass = net > 0 ? 'positive' : net < 0 ? 'negative' : 'zero';
         const netPrefix = net > 0 ? '+' : net < 0 ? '−' : '';
         const netLabel = net > 0 ? 'Net inflow — more cash coming in than going out' : net < 0 ? 'Net outflow — more cash going out than coming in' : 'Balanced';
