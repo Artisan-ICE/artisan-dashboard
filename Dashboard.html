@@ -1028,6 +1028,80 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* ── MODAL GROUPS (collapsible) ── */
+    .modal-groups {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .modal-group {
+      border: 1px solid var(--border2);
+    }
+    .modal-group[open] {
+      border-color: rgba(255,255,255,0.12);
+    }
+    .modal-group-summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+      background: rgba(255,255,255,0.02);
+      transition: background 0.15s;
+    }
+    .modal-group-summary::-webkit-details-marker { display: none; }
+    .modal-group-summary:hover { background: rgba(255,255,255,0.05); }
+    .modal-group[open] .modal-group-summary { border-bottom: 1px solid var(--border2); }
+    .modal-group-summary::before {
+      content: '▶';
+      font-size: 8px;
+      color: var(--dim);
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .modal-group[open] .modal-group-summary::before { transform: rotate(90deg); }
+    .modal-group-name {
+      font-size: 12px;
+      color: var(--white);
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .modal-group-meta {
+      font-size: 9px;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+      flex-shrink: 0;
+    }
+    .modal-group-amt {
+      font-family: var(--serif);
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .modal-group-amt.in { color: var(--green); }
+    .modal-group-amt.out { color: var(--red); }
+    .modal-group-table { margin: 0; }
+    .modal-group-table td, .modal-group-table th { padding: 7px 14px; }
+    .modal-group-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      border-top: 1px solid var(--border);
+      background: #070707;
+      margin-top: 2px;
+    }
+    .modal-group-total .modal-total-label {
+      font-size: 8px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
   </style>
 </head>
 
@@ -1354,9 +1428,9 @@
     function openModal(point) {
       const rec = point.breakdown.receivables;
       const pay = point.breakdown.payables;
-      const net = point.receivables - point.payables;
       const totalIn = rec.reduce((s, r) => s + r.amount, 0);
       const totalOut = pay.reduce((s, p) => s + p.amount, 0) + (point.recurring || 0);
+      const net = point.receivables - point.payables - (point.recurring || 0);
       const balClass = point.status === 'Critical' ? 'red' : point.status === 'Warning' ? 'amber' : 'green';
       const dayLabel = point.dayOffset === 0 ? 'Today' : 'Day ' + point.dayOffset;
 
@@ -1370,32 +1444,57 @@
 
       let body = '';
 
+      // ── CASH IN — grouped by customer ──
       body += `<div><div class="modal-section-title"><span class="ms-dot in"></span>Cash In · Receivables</div>`;
       if (!rec.length) {
         body += '<div class="modal-empty">No receivables due this day</div>';
       } else {
-        body += `<table class="modal-table"><thead><tr><th>Invoice / Customer</th><th>Original Due</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
-        rec.forEach(r => {
-          body += `<tr><td><div class="modal-ref">${r.invoice}${r.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div><div class="modal-party">${r.customer}</div></td><td class="modal-due">${r.originalDue || '—'}</td><td class="modal-amt-in">+${fmt(r.amount)}</td></tr>`;
+        const recByCustomer = {};
+        rec.forEach(r => { if (!recByCustomer[r.customer]) recByCustomer[r.customer] = []; recByCustomer[r.customer].push(r); });
+        body += '<div class="modal-groups">';
+        Object.entries(recByCustomer).forEach(([customer, invoices]) => {
+          const sub = invoices.reduce((s, r) => s + r.amount, 0);
+          const hasOverdue = invoices.some(r => r.overdue);
+          body += `<details class="modal-group"><summary class="modal-group-summary"><span class="modal-group-name">${customer}${hasOverdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</span><span class="modal-group-meta">${invoices.length} invoice${invoices.length > 1 ? 's' : ''}</span><span class="modal-group-amt in">+${fmt(sub)}</span></summary>`;
+          body += `<table class="modal-table modal-group-table"><thead><tr><th>Invoice</th><th>Due Date</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+          invoices.forEach(r => {
+            body += `<tr><td><div class="modal-ref">${r.invoice}${r.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div></td><td class="modal-due">${r.originalDue || '—'}</td><td class="modal-amt-in">+${fmt(r.amount)}</td></tr>`;
+          });
+          body += '</tbody></table></details>';
         });
-        if (rec.length > 1) body += `<tr class="modal-total-row"><td colspan="2"><span class="modal-total-label">Total receivables</span></td><td class="modal-amt-in">+${fmt(totalIn)}</td></tr>`;
-        body += '</tbody></table>';
+        if (rec.length > 1) body += `<div class="modal-group-total"><span class="modal-total-label">Total receivables</span><span class="modal-amt-in">+${fmt(totalIn)}</span></div>`;
+        body += '</div>';
       }
       body += '</div>';
 
+      // ── CASH OUT — grouped by vendor + recurring by category ──
       body += `<div><div class="modal-section-title"><span class="ms-dot out"></span>Cash Out · Payables</div>`;
       if (!pay.length && !(point.recurring > 0)) {
         body += '<div class="modal-empty">No payables due this day</div>';
       } else {
-        body += `<table class="modal-table"><thead><tr><th>Bill / Vendor</th><th>Original Due</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
-        pay.forEach(p => {
-          body += `<tr><td><div class="modal-ref">${p.bill}${p.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div><div class="modal-party">${p.vendor}</div></td><td class="modal-due">${p.originalDue || '—'}</td><td class="modal-amt-out">−${fmt(p.amount)}</td></tr>`;
+        body += '<div class="modal-groups">';
+        // Group payables by vendor
+        const payByVendor = {};
+        pay.forEach(p => { if (!payByVendor[p.vendor]) payByVendor[p.vendor] = []; payByVendor[p.vendor].push(p); });
+        Object.entries(payByVendor).forEach(([vendor, bills]) => {
+          const sub = bills.reduce((s, p) => s + p.amount, 0);
+          const hasOverdue = bills.some(p => p.overdue);
+          body += `<details class="modal-group"><summary class="modal-group-summary"><span class="modal-group-name">${vendor}${hasOverdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</span><span class="modal-group-meta">${bills.length} bill${bills.length > 1 ? 's' : ''}</span><span class="modal-group-amt out">−${fmt(sub)}</span></summary>`;
+          body += `<table class="modal-table modal-group-table"><thead><tr><th>Bill</th><th>Due Date</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+          bills.forEach(p => {
+            body += `<tr><td><div class="modal-ref">${p.bill}${p.overdue ? '<span class="modal-overdue-tag">OVERDUE</span>' : ''}</div></td><td class="modal-due">${p.originalDue || '—'}</td><td class="modal-amt-out">−${fmt(p.amount)}</td></tr>`;
+          });
+          body += '</tbody></table></details>';
         });
+        // Recurring as collapsible group
         if ((point.recurring || 0) > 0) {
-          body += `<tr><td><div class="modal-ref">Recurring Expenses</div><div class="modal-party">Daily recurring</div></td><td class="modal-due">—</td><td class="modal-amt-out">−${fmt(point.recurring)}</td></tr>`;
+          body += `<details class="modal-group"><summary class="modal-group-summary"><span class="modal-group-name">Recurring Expenses</span><span class="modal-group-meta">Daily</span><span class="modal-group-amt out">−${fmt(point.recurring)}</span></summary>`;
+          body += `<table class="modal-table modal-group-table"><thead><tr><th>Description</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+          body += `<tr><td><div class="modal-ref">Recurring Expenses</div></td><td class="modal-amt-out">−${fmt(point.recurring)}</td></tr>`;
+          body += '</tbody></table></details>';
         }
-        if (pay.length > 1 || (point.recurring || 0) > 0) body += `<tr class="modal-total-row"><td colspan="2"><span class="modal-total-label">Total payables + recurring</span></td><td class="modal-amt-out">−${fmt(totalOut)}</td></tr>`;
-        body += '</tbody></table>';
+        if (pay.length > 1 || (point.recurring || 0) > 0) body += `<div class="modal-group-total"><span class="modal-total-label">Total payables + recurring</span><span class="modal-amt-out">−${fmt(totalOut)}</span></div>`;
+        body += '</div>';
       }
       body += '</div>';
 
