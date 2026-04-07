@@ -1263,7 +1263,7 @@
     async function getSheet(name) {
       const d = await graphGet(
         '/sites/' + CONFIG.SITE_ID +
-        '/drive/root:/' + CONFIG.FILE_PATH +
+        '/drive/root:/Shared%20Documents/Cashflow/Artisan_Zoho_CashFlow.xlsx' +
         ':/workbook/worksheets/' + encodeURIComponent(name) + '/usedRange'
       );
       return d.values || [];
