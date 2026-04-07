@@ -1721,8 +1721,9 @@
 
       const projMax = Math.max(...balances);
       const projMin = Math.min(...balances);
-      const yMax = Math.ceil(projMax * 1.4 / 10000) * 10000;
-      const yMin = Math.min(0, Math.floor(projMin * 0.85 / 10000) * 10000);
+      const padding = Math.abs(projMax - projMin) * 0.2 || 10000;
+      const yMax = Math.ceil((projMax + padding) / 10000) * 10000;
+      const yMin = Math.floor((projMin - padding) / 10000) * 10000;
       const flowAbsMax = Math.max(...recVals, ...payVals, 1);
       const flowYMax = Math.ceil(flowAbsMax * 1.4 / 1000) * 1000;
 
