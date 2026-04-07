@@ -1258,10 +1258,21 @@
     }
 
     async function getDashboardData() {
-      const [recRaw, payRaw, bankRaw, projRaw] = await Promise.all([
+      const [recRaw, payRaw, bankRaw, projRaw, recurRaw] = await Promise.all([
         getSheet('Receivables'), getSheet('Payables'),
-        getSheet('BankBalances'), getSheet('Projection')
+        getSheet('BankBalances'), getSheet('Projection'),
+        getSheet('RecurringExpenses')
       ]);
+
+      // Build recurMap: PaymentDate → [{name, amount, category, monthName}]
+      // Columns: ExpenseName(0) Amount(1) Month(2) Category(3) IsActive(4) PaymentDate(5)
+      const recurMap = {};
+      recurRaw.slice(1).filter(r => r[0] && (r[4] === true || r[4] === 1 || String(r[4]).toUpperCase() === 'TRUE')).forEach(r => {
+        const pd = toDateStr(r[5]);
+        if (!pd) return;
+        if (!recurMap[pd]) recurMap[pd] = [];
+        recurMap[pd].push({ name: String(r[0] || 'Recurring'), amount: Number(r[1]) || 0, category: String(r[3] || ''), monthName: String(r[2] || '') });
+      });
 
       const recData = recRaw.slice(1).filter(r => r[0]);
       const payData = payRaw.slice(1).filter(r => r[0]);
@@ -1305,6 +1316,7 @@
           dateFull = fmtDateDisplay(row[0]);
         }
 
+        const dayRecurItems = recurMap[rowDateStr] || [];
         return {
           date: dateShort, fullDate: dateFull,
           dayOffset: Number(row[1]) || 0,
@@ -1313,7 +1325,7 @@
           payables: Number(row[4]) || 0,
           recurring: Number(row[5]) || 0,
           status: String(row[8] || 'Healthy'),
-          breakdown: { receivables: dayReceivables, payables: dayPayables }
+          breakdown: { receivables: dayReceivables, payables: dayPayables, recurItems: dayRecurItems }
         };
       });
 
@@ -1486,12 +1498,34 @@
           });
           body += '</tbody></table></details>';
         });
-        // Recurring as collapsible group
+        // Recurring — grouped by category with individual names
         if ((point.recurring || 0) > 0) {
-          body += `<details class="modal-group"><summary class="modal-group-summary"><span class="modal-group-name">Recurring Expenses</span><span class="modal-group-meta">Daily</span><span class="modal-group-amt out">−${fmt(point.recurring)}</span></summary>`;
-          body += `<table class="modal-table modal-group-table"><thead><tr><th>Description</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
-          body += `<tr><td><div class="modal-ref">Recurring Expenses</div></td><td class="modal-amt-out">−${fmt(point.recurring)}</td></tr>`;
-          body += '</tbody></table></details>';
+          const recurItems = (point.breakdown && point.breakdown.recurItems) || [];
+          if (recurItems.length > 0) {
+            // Group by category
+            const recurByCat = {};
+            recurItems.filter(ri => ri.amount > 0).forEach(ri => {
+              const k = ri.category || 'Recurring';
+              if (!recurByCat[k]) recurByCat[k] = [];
+              recurByCat[k].push(ri);
+            });
+            Object.entries(recurByCat).forEach(([cat, items]) => {
+              const sub = items.reduce((s, r) => s + r.amount, 0);
+              const meta = (items[0].monthName || '') + (items[0].monthName ? ' · ' : '') + items.length + ' item' + (items.length > 1 ? 's' : '');
+              body += `<details class="modal-group"><summary class="modal-group-summary"><span class="modal-group-name">${cat}</span><span class="modal-group-meta">${meta}</span><span class="modal-group-amt out">−${fmt(sub)}</span></summary>`;
+              body += `<table class="modal-table modal-group-table"><thead><tr><th>Expense</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+              items.forEach(ri => {
+                body += `<tr><td><div class="modal-ref">${ri.name}</div></td><td class="modal-amt-out">−${fmt(ri.amount)}</td></tr>`;
+              });
+              body += '</tbody></table></details>';
+            });
+          } else {
+            // Fallback: no RecurringExpenses sheet data, show lump sum
+            body += `<details class="modal-group"><summary class="modal-group-summary"><span class="modal-group-name">Recurring Expenses</span><span class="modal-group-meta">Daily</span><span class="modal-group-amt out">−${fmt(point.recurring)}</span></summary>`;
+            body += `<table class="modal-table modal-group-table"><thead><tr><th>Description</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+            body += `<tr><td><div class="modal-ref">Recurring Expenses</div></td><td class="modal-amt-out">−${fmt(point.recurring)}</td></tr>`;
+            body += '</tbody></table></details>';
+          }
         }
         if (pay.length > 1 || (point.recurring || 0) > 0) body += `<div class="modal-group-total"><span class="modal-total-label">Total payables + recurring</span><span class="modal-amt-out">−${fmt(totalOut)}</span></div>`;
         body += '</div>';
